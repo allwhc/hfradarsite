@@ -8,8 +8,7 @@ __pycache__/
 # Note: bigbask credentials file is tracked for deployment
 
 # Database
-*.db
-users.db
+# Note: users.db is tracked for deployment
 
 # Environment
 .env
