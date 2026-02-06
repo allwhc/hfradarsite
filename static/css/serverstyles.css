@@ -1,0 +1,232 @@
+p, a, h41, select,label {
+	font-family:Verdana; font-size:14px; font-weight:normal; color:#000000; text-decoration:none
+}
+h11 {
+	font-family:Verdana; font-size:30px; font-weight:bold; color:#000000; text-decoration:none
+}
+h21 {
+	font-family:Verdana; font-size:18px; font-weight:bold; color:#000000; text-decoration:none
+}
+h31 {
+	font-family:Verdana; font-size:18px; font-weight:normal; color:#000000; text-decoration:none
+}
+table tr,h51 {
+	font-family:Verdana; font-size:14px; font-weight:bold; color:#000000; text-decoration:none; text-align: center;
+}
+h61 {
+	font-family:Verdana; font-size:20px; font-weight:bold; color:#000000; text-decoration:none;
+}
+h71 {
+	font-family:Verdana; font-size:14px; font-weight:bold; color:#000000; text-decoration:none;
+}
+input[type="text"] {
+	font-family:Verdana; font-size:14px; font-weight:normal; color:#000000; text-decoration:none;
+}
+h99 {
+	font-family:Verdana; font-size:14px; font-weight:bold; color:#00305F; text-decoration:none
+}
+h991 {
+	font-family:Verdana; font-size:20px; font-weight:bold; color:#00305F; text-decoration:none
+}
+/*.nav-pills > li.active > a, .btn-primary {
+  background-color: #B0C4DE !important;
+  border-radius: 25px;
+  color: #B0C4DE;
+  font-family:Verdana; font-size:14px; font-weight:normal; color:#00305F; text-decoration:none
+}*/
+/*ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+li {
+    float: left;
+    border-bottom-width: 0;
+    margin: 3px 3px 0px 3px;
+    padding: 5px 5px 0px 5px;
+    background-color: #F0F8FF;
+    color: #B0C4DE;
+    font-family:Verdana; font-size:14px; font-weight:normal; color:#00305F; text-decoration:none;
+}*/
+.mainView {
+    border: 1px solid black;
+	clear: both;
+	padding: 0 1em;
+	/*background-color: #B0C4DE*/
+	/*background-color: #e5e5ff;*/
+	background-color: #b3b3ff;
+}
+/*.active {
+    background-color: #F0F8FF;
+    color: #000;
+}*/
+.left_pane {
+	width:160px;
+	height:35px;
+	float:left;
+}
+.right_pane {
+	width:300px;
+	height:35px;
+	float:left;
+}
+.cent_pane {
+	width:300px;
+	height:35px;
+	float:left;
+}
+.button_example {
+	-moz-box-shadow:inset 0px 1px 0px 0px #54a3f7;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #54a3f7;
+	box-shadow:inset 0px 1px 0px 0px #54a3f7;
+	background-color:#007dc1;
+	-moz-border-radius:3px;
+	-webkit-border-radius:3px;
+	border-radius:3px;
+	border:1px solid #124d77;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:13px;
+	padding:6px 24px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #154682;
+}
+.button_example:hover {
+	background-color:#0061a7;
+}
+.button_example:active {
+	position:relative;
+	top:1px;
+}#header {
+    width:100%;
+    height:90px;
+}
+#headerscrl {
+    position:absolute;
+    width:100%;
+    top: 730px;
+    height: 100px;
+	font-family:Verdana; font-size:20px; font-weight:normal; color:#00305F; text-decoration:none; text-align: center;;
+    background: #eee;
+}
+#logo {
+	float: left;
+	width:83px;
+    height:83px;
+    margin:1px;
+    background-image:url("../images/ic_tsu.png");
+}
+/*[type="radio"]:checked,
+[type="radio"]:not(:checked) {
+    position: absolute;
+    left: -9999px;
+}
+[type="radio"]:checked + label,
+[type="radio"]:not(:checked) + label
+{
+    position: relative;
+    padding-left: 28px;
+    cursor: pointer;
+    line-height: 20px;
+    display: inline-block;
+    color: white;
+    font-family:Verdana; font-size:14px; font-weight:normal; color:#00305F; text-decoration:none;
+}
+[type="radio"]:checked + label:before,
+[type="radio"]:not(:checked) + label:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #ddd;
+    border-radius: 100%;
+    background: white;
+    font-family:Verdana; font-size:14px; font-weight:normal; color:#00305F; text-decoration:none;
+}
+[type="radio"]:checked + label:after,
+[type="radio"]:not(:checked) + label:after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    background: #4f8ebe;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    border-radius: 100%;
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+[type="radio"]:not(:checked) + label:after {
+    opacity: 0;
+    -webkit-transform: scale(0);
+    transform: scale(0);
+}
+[type="radio"]:checked + label:after {
+    opacity: 1;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+}*/
+.bgrndimg {
+    /*background: #d8e5f3;*/
+    background: #c4d8ed;
+    height:960px;
+}
+.bgrndimg1 {
+    background: #c4d8ed;
+    height:960px;
+}
+.textscrl {
+    background: #c4d8ed;
+    height:100px;
+}
+.headrimg
+{
+    position:absolute;
+    left: 300px;
+    top: 30px;
+    width:680px;
+	height: 80px;
+	font-family:Verdana; font-size:30px; font-weight:normal; color:#00305F; text-decoration:none; text-align: center;
+}
+.ctab{
+    border-collapse:collapse;
+}
+.ctab td,th{
+    border:#000000 1px solid;
+}
+/* provide some minimal visual accomodation for IE8 and below */
+.ctab thead tr th{
+    background: #ffffff;
+    font-family:Verdana; font-size:14px; font-weight:bold; color:#000000; text-decoration:none; text-align: center;
+}
+/*  Define the background color for all the ODD background rows  */
+.ctab tbody tr:nth-child(odd){
+    background: #ffffff;
+    font-family:Verdana; font-size:14px; font-weight:normal; color:#000000; text-decoration:none; text-align: center;
+}
+/*  Define the background color for all the EVEN background rows  */
+.ctab tbody tr:nth-child(even){
+    background: #ffffff;
+    font-family:Verdana; font-size:14px; font-weight:normal; color:#000000; text-decoration:none; text-align: center;
+}
+
+.ctab tbody tr:hover{
+    background: #7FFFD4	;
+}
+
+.msg_pane {
+	width:190px;
+	height:35px;
+	float:left;
+}
+
+
+
+
+
+
+

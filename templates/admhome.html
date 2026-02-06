@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Welcome To HF Radar Server!</title>
+
+    <meta name="description" content="Source code generated using layoutit.com">
+    <meta name="author" content="LayoutIt!">
+	<link rel="stylesheet" href="../static/css/serverstyles.css">
+    <link rel="stylesheet" href="../static/css/bootstrap.css">
+	<link rel="stylesheet" href="../static/css/jquery-ui.css">
+	<script src="../static/js/jquery-1.11.2.js"></script>
+	<script src="../static/js/jquery-ui.js"></script>
+	<script type="text/javascript" src="../static/js/angular.min.js"></script>
+	<style>
+	.pnltab {
+		background-color: #ccccff;
+	}
+
+	.menutab {
+		background-color: #e6faff;
+	}
+
+	.pnlstab>li:hover, .pnlstab>li.selected
+	{
+		background-color: #b8d1f3;
+	}
+
+	/* Password visibility toggle */
+	.password-wrapper {
+		position: relative;
+		display: inline-block;
+	}
+	.password-wrapper input {
+		padding-right: 35px;
+	}
+	.toggle-password {
+		position: absolute;
+		right: 8px;
+		top: 50%;
+		transform: translateY(-50%);
+		cursor: pointer;
+		color: #666;
+		font-size: 16px;
+		user-select: none;
+	}
+	.toggle-password:hover {
+		color: #333;
+	}
+	</style>
+
+	<script type="text/javascript">
+    	function noBack1()
+        {
+            window.history.forward();
+        }
+
+		// Password visibility toggle function
+		function togglePasswordVisibility(inputId, toggleElement) {
+			var passwordInput = document.getElementById(inputId);
+			if (passwordInput.type === "password") {
+				passwordInput.type = "text";
+				toggleElement.innerHTML = "&#128064;"; // Open eye
+				toggleElement.style.color = "#333";
+			} else {
+				passwordInput.type = "password";
+				toggleElement.innerHTML = "&#128065;"; // Eye icon
+				toggleElement.style.color = "#666";
+			}
+		}
+    </script>
+</head>
+
+<body onload="noBack1();" ng-app="admtabApp" ng-controller="aTabController" ng-init="setTab(8);">
+  <div id="fserv" class="bgrndimg" align="center">
+  <div id="header" align="center"><div id="logo" align="center"></div><div class="headrimg" align="center">HF RADAR SERVER</div></div>
+
+	<div class="container">
+		<div class="row" >
+		    <div class="col-md-2">
+
+        	  <div class="list-group">
+                 <ul class="nav">
+        			<a id="ucred"  ng-click="setTab(8)" class="list-group-item active">
+        				User Credentials
+        			</a>
+
+        			<a id="acred" ng-click="setTab(9)" class="list-group-item">
+        				Admin Credentials
+        			</a>
+
+					<a id="lcred" ng-click="setTab(10)" class="list-group-item">
+        				List Credentials
+        			</a>
+
+        			<a id="mcred" ng-click="setTab(11)" class="list-group-item">
+        				Manage Site
+        			</a>
+
+					<a id="sitesmgmt" ng-click="setTab(12)" class="list-group-item">
+        				Manage Sites List
+        			</a>
+
+					<a id="dbbackup" ng-click="setTab(13)" class="list-group-item">
+        				Database Backup
+        			</a>
+
+					<a id="lgout" class="list-group-item" href="/logout">Logout</a>
+                  </ul>
+              </div>
+            </div>
+		    <div class="col-md-10">
+
+			<div ng-show="isSet(8)">
+				<div id="credtabs" ng-controller="CredTabsCtrl" class="mainView">
+					<div align="center"><label>Change Credentials</label></div>
+						<div class="content">
+						<form name="Credentialsform" >
+						<input type="hidden" name="utype" value="user" />
+                        <div class="row">
+							<div class="col-md-3">
+                                <div class="form-group">
+									<label>Username</label>
+								</div>
+							</div>
+							<div class="col-md-5">
+                                <div class="form-group">
+									<input type="text" class="form-control" name="username" value="" style="width: 260px;">
+								</div>
+							</div>
+							<div class="col-md-4">
+                                <div class="form-group">
+									<label><div id="cuIdMessage1"></div></label>
+								</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-3">
+                                <div class="form-group">
+									<label>Password</label>
+								</div>
+							</div>
+							<div class="col-md-5">
+                                <div class="form-group">
+									<div class="password-wrapper">
+										<input type="password" class="form-control" name="password" id="userPassword" value="" style="width: 260px;">
+										<span class="toggle-password" onclick="togglePasswordVisibility('userPassword', this)">&#128065;</span>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+                                <div class="form-group">
+									<label><div id="cuIdMessage2"></div></label>
+								</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-4">
+
+							</div>
+							<div class="col-md-4">
+                                <div class="form-group">
+									<input type="submit" class="button_example" value="Apply" ng-click="changecred2()" />&nbsp;&nbsp;&nbsp;<input type="button" class="button_example" value="Reset" ng-click="clrusr()" />
+								</div>
+							</div>
+							<div class="col-md-4">
+
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-12" align="center">
+                                <div class="form-group">
+									<label><div id="msgcredentials"></div></label>
+								</div>
+							</div>
+						</div>
+
+					</form>
+					</div>
+
+				</div>
+			</div>
+
+            <div ng-show="isSet(9)">
+				<div id="adcredtabs" ng-controller="AdCredTabsCtrl" class="mainView">
+					<div align="center"><label>Admin Credentials</label></div>
+						<div class="content">
+						<form name="AdCredentialsform" id="AdCredentialsform">
+                        <input type="hidden" name="utype" value="admin" />
+                        <div class="row">
+							<div class="col-md-3">
+                                <div class="form-group">
+									<label>Username</label>
+								</div>
+							</div>
+							<div class="col-md-5">
+                                <div class="form-group">
+									<input type="text" class="form-control" name="username" value="" style="width: 260px;">
+								</div>
+							</div>
+							<div class="col-md-4">
+                                <div class="form-group">
+									<label><div id="auIdMessage1"></div></label>
+								</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-3">
+                                <div class="form-group">
+									<label>Password</label>
+								</div>
+							</div>
+							<div class="col-md-5">
+                                <div class="form-group">
+									<div class="password-wrapper">
+										<input type="password" class="form-control" name="password" id="adminPassword" value="" style="width: 260px;">
+										<span class="toggle-password" onclick="togglePasswordVisibility('adminPassword', this)">&#128065;</span>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+                                <div class="form-group">
+									<label><div id="auIdMessage2"></div></label>
+								</div>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-4">
+
+							</div>
+							<div class="col-md-4">
+                                <div class="form-group">
+									<input type="submit" class="button_example" value="Apply" ng-click="achangecred2()" />&nbsp;&nbsp;&nbsp;<input type="button" class="button_example" value="Reset" ng-click="clradm()" />
+								</div>
+							</div>
+							<div class="col-md-4">
+
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="col-md-12" align="center">
+                                <div class="form-group">
+									<label><div id="amsgcredentials"></div></label>
+								</div>
+							</div>
+						</div>
+
+					</form>
+					</div>
+				</div>
+			</div>
+
+			<div ng-show="isSet(10)">
+				<div id="lstcredtabs" ng-controller="LstCredTabsCtrl" class="mainView">
+					<div class="well pnltab"><label>List Credentials</label></div>
+					<div class="content">
+						<table class="ktab" align="center" width="660"  border="1" bordercolor="#00305F">
+						  <thead>
+						   <tr align="center"><th align="center" width="220">Username</th><th align="center" width="220">Password</th><th align="center" width="220">Type</th></tr>
+						  </thead>
+						  <tbody>
+							<tr align="center" ng-repeat="item2 in credentries">
+							   <td align="center" width="220">{{item2.usernm}}</td><td align="center" width="220">{{item2.pwd}}</td><td align="center" width="260">{{item2.utype}}</td>
+							</tr>
+						  </tbody>
+						</table>
+						<br><br><br>
+					</div>
+				</div>
+			</div>
+
+			<div ng-show="isSet(11)">
+				<div id="lstmngtabs" ng-controller="LstMngTabsCtrl" class="mainView">
+					<div class="well pnltab"><label>Manage Site</label></div>
+					<div class="content">
+					    <div class="row">
+							<div class="col-md-12">
+                                <label><div id="mmsg1"></div></label>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-4">
+							</div>
+							<div class="col-md-4">
+                                <div class="form-group">
+									<input type="button" class="button_example" value="Activate" ng-click="siteactivate()" />&nbsp;&nbsp;&nbsp;<input type="button" class="button_example" value="Deactivate" ng-click="sitedeactivate()" />
+								</div>
+							</div>
+							<div class="col-md-4">
+
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12" align="center">
+                                <div class="form-group">
+									<label><div id="mmsg"></div></label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div ng-show="isSet(12)">
+				<div id="siteslisttabs" ng-controller="SitesListCtrl" class="mainView">
+					<div class="well pnltab"><label>Manage Sites List</label></div>
+					<div class="content">
+						<!-- Add New Site Section -->
+						<div class="row" style="margin-bottom: 20px;">
+							<div class="col-md-12">
+								<div class="panel panel-info">
+									<div class="panel-heading">Add New Site</div>
+									<div class="panel-body">
+										<form name="AddSiteForm" class="form-inline">
+											<div class="form-group">
+												<label>Site Code:&nbsp;</label>
+												<input type="text" class="form-control" id="newSiteCode" placeholder="e.g., Viza" style="width: 150px;">
+											</div>
+											&nbsp;&nbsp;
+											<input type="button" class="btn btn-success" value="Add Site" ng-click="addSite()" />
+										</form>
+										<div id="addSiteMsg" style="margin-top: 10px; color: green;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Sites List Table -->
+						<div class="row">
+							<div class="col-md-12">
+								<table class="table table-bordered table-striped" align="center">
+									<thead>
+										<tr>
+											<th width="50">#</th>
+											<th width="150">Site Code</th>
+											<th width="100">Status</th>
+											<th width="250">Action</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr ng-repeat="site in $parent.sitesList">
+											<td>{{site.order}}</td>
+											<td>
+												<span ng-hide="site.editing">{{site.code}}</span>
+												<input ng-show="site.editing" type="text" class="form-control input-sm" ng-model="site.newCode" style="width: 100px; display: inline-block;">
+											</td>
+											<td>
+												<span ng-if="site.active == 1" style="color: green;">Active</span>
+												<span ng-if="site.active == 0" style="color: red;">Inactive</span>
+											</td>
+											<td>
+												<button ng-hide="site.editing" class="btn btn-info btn-sm" ng-click="startEditSite(site)">Edit</button>
+												<button ng-show="site.editing" class="btn btn-success btn-sm" ng-click="saveSiteEdit(site)">Save</button>
+												<button ng-show="site.editing" class="btn btn-default btn-sm" ng-click="cancelEditSite(site)">Cancel</button>
+												<button ng-if="site.active == 1 && !site.editing" class="btn btn-warning btn-sm" ng-click="toggleSite(site.code, 0)">Deactivate</button>
+												<button ng-if="site.active == 0 && !site.editing" class="btn btn-success btn-sm" ng-click="toggleSite(site.code, 1)">Activate</button>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<!-- Status Message -->
+						<div class="row">
+							<div class="col-md-12" align="center">
+								<div id="sitesListMsg" style="margin-top: 10px;"></div>
+							</div>
+						</div>
+
+						<hr style="margin: 30px 0; border-top: 2px solid #ccc;">
+
+						<!-- Site Groups Section -->
+						<div class="row">
+							<div class="col-md-12">
+								<div class="panel panel-primary">
+									<div class="panel-heading">Site Groups (for Vector Reports) <span style="font-weight:normal; font-size:12px;">— Total Vector = minimum value across all sites in a group</span></div>
+									<div class="panel-body">
+
+										<!-- Group Cards -->
+										<div ng-repeat="pair in $parent.sitePairs" style="border: 1px solid #ccc; border-radius: 6px; padding: 12px; margin-bottom: 12px; background-color: #f9f9f9;">
+											<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+												<strong style="font-size: 15px; color: #337ab7;">{{pair.group}}</strong>
+												<button class="btn btn-danger btn-xs" ng-click="deleteGroup(pair.group)">Delete Group</button>
+											</div>
+											<!-- Sites in this group -->
+											<div style="margin-bottom: 8px;">
+												<span ng-repeat="site in pair.sites" class="label label-info" style="margin-right: 6px; display: inline-block; margin-bottom: 4px; font-size: 13px; padding: 5px 10px;">
+													{{site}}
+													<a href="" ng-click="removeSitePair(pair.group, site)" style="color: white; margin-left: 6px; font-weight: bold;" title="Remove site">&times;</a>
+												</span>
+												<span ng-if="pair.sites.length == 0" style="color: #999; font-style: italic;">No sites added yet</span>
+											</div>
+											<!-- Add site to this group -->
+											<div class="form-inline">
+												<select class="form-control input-sm" id="addSiteTo_{{pair.group}}" style="width: 120px;">
+													<option value="">-- Add Site --</option>
+													<option ng-repeat="usite in $parent.ungroupedSites" value="{{usite}}">{{usite}}</option>
+												</select>
+												&nbsp;
+												<button class="btn btn-success btn-xs" ng-click="addSiteToGroup(pair.group)">+ Add</button>
+											</div>
+										</div>
+
+										<!-- No groups message -->
+										<div ng-if="$parent.sitePairs.length == 0" style="text-align: center; color: #999; padding: 20px;">
+											No groups configured. Click "Add New Group" below to create one.
+										</div>
+
+										<!-- Add New Group Button -->
+										<div style="margin-top: 15px;">
+											<button class="btn btn-primary" ng-click="addNewGroup()">+ Add New Group</button>
+										</div>
+
+										<!-- Ungrouped Sites -->
+										<div ng-if="$parent.ungroupedSites.length > 0" style="margin-top: 20px; border: 1px dashed #f0ad4e; border-radius: 6px; padding: 12px; background-color: #fcf8e3;">
+											<strong style="color: #8a6d3b;">Ungrouped Sites</strong> <span style="color: #999; font-size: 12px;">(shown individually in reports, no vector row)</span>
+											<div style="margin-top: 8px;">
+												<span ng-repeat="site in $parent.ungroupedSites" class="label label-warning" style="margin-right: 8px; display: inline-block; margin-bottom: 5px; font-size: 13px; padding: 6px 10px;">
+													{{site}}
+												</span>
+											</div>
+										</div>
+
+										<div id="pairsMsg" style="margin-top: 10px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div ng-show="isSet(13)">
+				<div id="dbbackuptabs" ng-controller="DbBackupCtrl" class="mainView">
+					<div class="well pnltab"><label>Database Backup &amp; Restore</label></div>
+					<div class="content">
+						<!-- Download Backup Section -->
+						<div class="row" style="margin-bottom: 30px;">
+							<div class="col-md-12">
+								<div class="panel panel-success">
+									<div class="panel-heading"><strong>Download Database Backup</strong></div>
+									<div class="panel-body">
+										<p>Download a backup of all important database tables including:</p>
+										<ul>
+											<li>User credentials</li>
+											<li>Sites list and configuration</li>
+											<li>Site pairs/groups</li>
+											<li>Data source logs</li>
+											<li>Data comments</li>
+											<li>Activation status</li>
+										</ul>
+										<button class="btn btn-success btn-lg" ng-click="downloadBackup()">
+											<span style="font-size: 18px;">&#128190;</span> Download Backup
+										</button>
+										<div id="downloadMsg" style="margin-top: 10px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Upload Restore Section -->
+						<div class="row">
+							<div class="col-md-12">
+								<div class="panel panel-warning">
+									<div class="panel-heading"><strong>Restore Database from Backup</strong></div>
+									<div class="panel-body">
+										<p style="color: red;"><strong>Warning:</strong> Restoring a backup will overwrite existing data. Make sure you have a current backup before proceeding.</p>
+										<div class="form-group">
+											<label>Select Backup File (JSON):</label>
+											<input type="file" id="backupFile" accept=".json" class="form-control" style="width: 400px;">
+										</div>
+										<button class="btn btn-warning btn-lg" ng-click="uploadBackup()">
+											<span style="font-size: 18px;">&#128194;</span> Restore from Backup
+										</button>
+										<div id="uploadMsg" style="margin-top: 10px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+  </div>
+</div>
+
+<script type="text/javascript" src="../static/js/configangularadm.js"></script>
+
+</body>
+
+</html>
+

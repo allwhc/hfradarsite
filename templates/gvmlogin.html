@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html >
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Welcome To HF Radar Server!</title>
+
+    <meta name="description" content="Source code generated using layoutit.com">
+    <meta name="author" content="LayoutIt!">
+	<link rel="stylesheet" href="../static/css/serverstyles.css">
+    <link rel="stylesheet" href="../static/css/bootstrap.css">
+	<link rel="stylesheet" href="../static/css/jquery-ui.css">
+	<script src="../static/js/jquery-1.11.2.js"></script>
+	<script src="../static/js/jquery-ui.js"></script>
+	<script type="text/javascript" src="../static/js/angular.min.js"></script>
+	<style>
+	.password-wrapper {
+		position: relative;
+		display: inline-block;
+	}
+	.toggle-password {
+		position: absolute;
+		right: 8px;
+		top: 50%;
+		transform: translateY(-50%);
+		cursor: pointer;
+		color: #666;
+		font-size: 16px;
+		user-select: none;
+	}
+	.toggle-password:hover {
+		color: #333;
+	}
+	</style>
+    <script type="text/javascript">
+    function noBack1()
+    {
+        window.history.forward();
+    }
+
+	function togglePasswordVisibility(inputId, toggleElement) {
+		var passwordInput = document.getElementById(inputId);
+		if (passwordInput.type === "password") {
+			passwordInput.type = "text";
+			toggleElement.innerHTML = "&#128064;";
+			toggleElement.style.color = "#333";
+		} else {
+			passwordInput.type = "password";
+			toggleElement.innerHTML = "&#128065;";
+			toggleElement.style.color = "#666";
+		}
+	}
+	function valcheck()
+    {
+        var x1=document.forms["loginform"]["username"].value;
+        var x2=document.forms["loginform"]["password"].value;
+        document.getElementById("errmsg").innerHTML = "";
+        var val=0;
+        if ((x1==null || x1=="") )
+        {
+            document.getElementById("errmsg").innerHTML = "Please enter username";
+            val=1;
+        }
+        else
+        {
+            if ((x2==null || x2=="") )
+            {
+                document.getElementById("errmsg").innerHTML = "Please enter password";
+                val=1;
+            }
+            else
+            {
+                val=0;
+            }
+        }
+        if(val==0)
+        {
+            document.forms["loginform"].submit();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    function clrfrm()
+    {
+        document.forms["loginform"]["username"].value="";
+        document.forms["loginform"]["password"].value="";
+        document.getElementById("errmsg").innerHTML = "";
+    }
+</script>
+
+</head>
+
+<body class="grid-1" onload="noBack1();">
+  <div id="fserv" class="bgrndimg" align="center">
+  <div id="header" align="center"><div id="logo" align="center"></div><div class="headrimg" align="center">HF RADAR SERVER</div></div>
+  <div id="header1" align="center"><div align="center">WELCOME</div></div>
+	<div class="container">
+	    <div class="row" >
+				<div class="col-md-4">
+				</div>
+				<div class="col-md-4">
+					<a id="bdat" href="/aboutus"> About Us </a>
+				</div>
+				<div class="col-md-4">
+				</div>
+			</div>
+		    <div class="row" >
+				<div class="col-md-4">
+				</div>
+				<div class="col-md-4">
+					<label><h991>Login Page</h991></label>
+				</div>
+				<div class="col-md-4">
+				</div>
+			</div>
+			<div class="row" >
+				<div class="col-md-4">
+				</div>
+				<div class="col-md-4">
+				</div>
+				<div class="col-md-4">
+				</div>
+			</div>
+			<form id="loginform" name="loginform" method="post" action="authen" onsubmit="return valcheck();">
+			<div class="row">
+				<div class="col-md-3" ></div>
+				<div class="col-md-3" >
+					<h99>Username</h99>
+				</div>
+				<div class="col-md-3" >
+					<input id="username" type="text" name="username" value="" style="width:200px" placeholder="username"  autocomplete="off">
+				</div>
+				<div style="padding-top:30px" class="col-md-3" ></div>
+			</div>
+			<div class="row">
+				<div class="col-md-3"></div>
+				<div class="col-md-3" >
+					<h99>Password</h99>
+				</div>
+				<div class="col-md-3" >
+					<div class="password-wrapper">
+						<input id="pword" type="password" name="password" placeholder="password" style="width:200px"  autocomplete="off">
+						<span class="toggle-password" onclick="togglePasswordVisibility('pword', this)">&#128065;</span>
+					</div>
+				</div>
+				<div style="padding-top:30px" class="col-md-3" ></div>
+			</div>
+			<div class="row">
+				<div class="col-md-3" ></div>
+				<div class="col-md-3" >
+					<h99>Type</h99>
+				</div>
+				<div class="col-md-1" >
+					<h99>User</h99>
+				</div>
+				<div class="col-md-1" >
+					<input type="radio" name="styp" id="lgntyp1" checked value="user">
+				</div>
+				<div class="col-md-1" ><h99>Admin</h99></div>
+				<div class="col-md-1" ><input type="radio" name="styp" id="lgntyp2" value="admin"></div>
+				<div class="col-md-2" ></div>
+			</div>
+			<div class="row">
+			    <div class="col-md-5" ></div>
+				<div class="col-md-1" >
+					<input type="submit" id="btnImprt" class="button_example" value="Login">
+				</div>
+				<div class="col-md-1" >
+					<input type="button" id="btnReset" class="button_example" onclick="clrfrm();" value="Clear">
+				</div>
+				<div class="col-md-5" ></div>
+			</div>
+			<div class="row">
+			    <div class="col-md-3" ></div>
+				<div class="col-md-6" >
+					<h99><div id="errmsg" class="msgcls">{{emsg}}</div></h99>
+				</div>
+				<div class="col-md-3" ></div>
+			</div>
+			</form>
+		</div>
+
+    </div>
+
+</body>
+</html>
+

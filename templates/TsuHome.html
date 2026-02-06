@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Welcome To HF Radar Server!</title>
+
+    <meta name="description" content="Source code generated using layoutit.com">
+    <meta name="author" content="LayoutIt!">
+	<link rel="stylesheet" href="../static/css/serverstyles.css">
+    <link rel="stylesheet" href="../static/css/bootstrap.css">
+	<link rel="stylesheet" href="../static/css/jquery-ui.css">
+	<script src="../static/js/jquery-1.11.2.js"></script>
+	<script src="../static/js/jquery-ui.js"></script>
+	<script type="text/javascript" src="../static/js/angular.min.js"></script>
+	<script type="text/javascript">
+    function noBack1()
+    {
+        window.history.forward();
+    }
+    </script>
+	<style>
+	.pnltab {
+		background-color: #ccccff;
+	}
+
+	.menutab {
+		background-color: #e6faff;
+	}
+
+	.pnlstab>li:hover, .pnlstab>li.selected
+	{
+		background-color: #b8d1f3;
+	}
+
+	/* Loading spinner overlay */
+	.loading-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 9999;
+	}
+	.spinner {
+		border: 8px solid #f3f3f3;
+		border-top: 8px solid #3498db;
+		border-radius: 50%;
+		width: 60px;
+		height: 60px;
+		animation: spin 1s linear infinite;
+	}
+	@keyframes spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+	.loading-text {
+		color: white;
+		margin-top: 15px;
+		font-size: 18px;
+	}
+
+	/* Info toggle and comment styles */
+	.info-toggle-btn {
+		background-color: #5bc0de;
+		border: 1px solid #46b8da;
+		color: white;
+		padding: 5px 15px;
+		border-radius: 4px;
+		cursor: pointer;
+		margin-left: 10px;
+	}
+	.info-toggle-btn.active {
+		background-color: #31b0d5;
+		border-color: #269abc;
+	}
+	.info-toggle-btn:hover {
+		background-color: #31b0d5;
+	}
+	.has-comment {
+		position: relative;
+	}
+	.comment-indicator {
+		color: red;
+		font-weight: bold;
+		font-size: 10px;
+		position: absolute;
+		top: 0;
+		right: 2px;
+	}
+	.clickable-cell {
+		cursor: pointer;
+	}
+	.clickable-cell:hover {
+		background-color: #ffffcc !important;
+	}
+	/* Tooltip styles */
+	.cell-tooltip {
+		position: absolute;
+		background-color: #333;
+		color: white;
+		padding: 8px 12px;
+		border-radius: 4px;
+		font-size: 12px;
+		z-index: 1000;
+		max-width: 250px;
+		box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+	}
+	.cell-tooltip::after {
+		content: '';
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		margin-left: -5px;
+		border-width: 5px;
+		border-style: solid;
+		border-color: #333 transparent transparent transparent;
+	}
+	/* Comment modal styles */
+	.comment-modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 10000;
+	}
+	.comment-modal {
+		background-color: white;
+		padding: 20px;
+		border-radius: 8px;
+		min-width: 350px;
+		max-width: 450px;
+		box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+	}
+	.comment-modal h4 {
+		margin-top: 0;
+		margin-bottom: 15px;
+		color: #333;
+	}
+	.comment-modal textarea {
+		width: 100%;
+		height: 100px;
+		margin-bottom: 15px;
+		padding: 8px;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		resize: vertical;
+	}
+	.comment-modal-buttons {
+		text-align: right;
+	}
+	.comment-modal-buttons button {
+		margin-left: 10px;
+		padding: 8px 16px;
+	}
+	/* Data source summary table */
+	.source-summary-table {
+		margin-top: 20px;
+		border-collapse: collapse;
+	}
+	.source-summary-table th, .source-summary-table td {
+		border: 1px solid #ddd;
+		padding: 8px;
+		text-align: center;
+	}
+	.source-summary-table th {
+		background-color: #f5f5f5;
+	}
+	.source-auto { color: #28a745; font-weight: bold; }
+	.source-qr { color: #007bff; font-weight: bold; }
+	.source-manual { color: #dc3545; font-weight: bold; }
+	</style>
+</head>
+<body onload="noBack1()">
+
+<div id="fserv" class="bgrndimg" align="center">
+<div id="header" align="center"><div id="logo" align="center"></div><div class="headrimg" align="center">HF RADAR SERVER</div></div>
+
+	<div class="container" ng-app="tabApp">
+		<div class="row" ng-controller="TabController" ng-init="setTab(3);">
+			<!-- Loading Spinner Overlay -->
+			<div class="loading-overlay" ng-show="isLoading">
+				<div style="text-align: center;">
+					<div class="spinner"></div>
+					<div class="loading-text">Loading report...</div>
+				</div>
+			</div>
+
+		    <div class="col-md-2">
+
+        	  <div class="list-group">
+                 <ul class="nav">
+        			<a id="fdat" ng-click="setTab(3)" class="list-group-item active">
+        				Reports
+        			</a>
+        			<a id="gdat" ng-click="setTab(4)" class="list-group-item menutab">
+        				Custom Report
+        			</a>
+        			<a id="ydat" ng-click="setTab(5)" class="list-group-item menutab">
+        				Yearly Report
+        			</a>
+        			<a id="adat" ng-click="setTab(6)" class="list-group-item menutab">
+        				About Us
+        			</a>
+        			<a id="lgout" class="list-group-item menutab" href="/logout">Logout</a>
+                  </ul>
+              </div>
+            </div>
+		    <div class="col-md-10">
+				<div ng-show="isSet(1)">
+    				<div id="atabs" ng-controller="TabsCtrl" class="panel panel-default menutab">
+    					<div class="well pnltab"><label>Send HF Radar Report To Server</label></div>
+    						<div class="content">
+    							<form name='aform' id="aform" >
+
+    								  <div class="row">
+    									<div class="col-md-3">
+    										<div class="form-group">
+    											<label>Month</label>
+    										</div>
+    									</div>
+    									<div class="col-md-3">
+    										<div class="form-group">
+    											<select  class="form-control" name="optselmon" id="optselmon">
+    											  <option value="Select">---Select---</option>
+    											  <option value="1">January</option>
+    											  <option value="2">February</option>
+    											  <option value="3">March</option>
+    											  <option value="4">April</option>
+    											  <option value="5">May</option>
+    											  <option value="6">June</option>
+    											  <option value="7">July</option>
+    											  <option value="8">August</option>
+    											  <option value="9">September</option>
+    											  <option value="10">October</option>
+    											  <option value="11">November</option>
+    											  <option value="12">December</option>
+    											</select>
+    										</div>
+    									</div>
+    									<div class="col-md-3">
+    										<div class="form-group">
+    											<label><div id="uIdMessage21"></div></label>
+    										</div>
+    									</div>
+    								</div>
+
+    								<div class="row">
+    									<div class="col-md-3">
+    										<div class="form-group">
+    											<label>Year</label>
+    										</div>
+    									</div>
+    									<div class="col-md-3">
+    										<div class="form-group" align="left">
+    											<select  class="form-control" name="optselyr" id="optselyr">
+    											  <option value="Select">---Select---</option>
+    											  <option value="2025">2030</option>
+    											  <option value="2024">2029</option>
+    											  <option value="2023">2028</option>
+    											  <option value="2022">2027</option>
+    											  <option value="2021">2026</option>
+    											  <option value="2025">2025</option>
+    											  <option value="2024">2024</option>
+    											  <option value="2023">2023</option>
+    											  <option value="2022">2022</option>
+    											  <option value="2021">2021</option>
+    											  <option value="2020">2020</option>
+    											  <option value="2019">2019</option>
+    											  <option value="2018">2018</option>
+    											  <option value="2017">2017</option>
+    											  <option value="2016">2016</option>
+    											  <option value="2015">2015</option>
+    											</select>
+    										</div>
+    									</div>
+    									<div class="col-md-3">
+    										<div class="form-group">
+    											<label><div id="uIdMessage29"></div></label>
+    										</div>
+    									</div>
+    								</div>
+
+    								<div class="row">
+    									<div class="col-md-2">
+
+    									</div>
+    									<div class="col-md-5">
+    										<div class="form-group">
+    											<input type="submit" class="button_example" value="SEND" ng-click="sendrep();" />&nbsp;&nbsp;&nbsp;<input type="button" class="button_example" ng-click="resetfrm()" value="CLEAR" />
+    										</div>
+    									</div>
+    									<div class="col-md-2">
+
+    									</div>
+    								</div>
+
+    								<div class="row">
+    									<div class="col-md-9">
+    										<div class="form-group">
+    											<label><div id="msg1"></div></label>
+    										</div>
+    									</div>
+    								</div>
+
+    							</form>
+    						</div>
+    					</div>
+    				</div>
+
+            <div ng-show="isSet(3)">
+			  <div id="ftabs" ng-controller="FTabsCtrl" class="panel panel-default menutab">
+			    <div class="well pnltab"><label>Reports</label>&nbsp;&nbsp;&nbsp;<label><div id="rhdr2" ng-if="iv > 0"></div></label></div>
+                    <div class="content">
+						<form name='fform' id="fform" >
+
+                              <div class="row">
+    									<div class="col-md-3">
+    										<div class="form-group">
+    											<label>Month</label>
+    										</div>
+    									</div>
+    									<div class="col-md-3">
+    										<div class="form-group">
+    											<select  class="form-control" ng-model="form.type" name="optlstmon" id="optlstmon">
+    											    <option ng-repeat="x in avmon" value="{{x.smon}}">{{x.nm}}</option>
+
+    											</select>
+    										</div>
+    									</div>
+    									<div class="col-md-3">
+    										<div class="form-group">
+    											<label>&nbsp;</label>
+    										</div>
+    									</div>
+    								</div>
+
+    								<div class="row">
+    									<div class="col-md-3">
+    										<div class="form-group">
+    											<label>Year</label>
+    										</div>
+    									</div>
+    									<div class="col-md-3">
+    										<div class="form-group" align="left">
+    											<select  class="form-control" name="optlstyr" id="optlstyr" ng-model="form1.type">
+    											    <option ng-repeat="x in avyr" value="{{x.yrval}}">{{x.yr}}</option>
+
+    											</select>
+    										</div>
+    									</div>
+    									<div class="col-md-6">
+    										<div class="form-group">
+    											<label><div id="msg3"></div></label>
+    										</div>
+    									</div>
+    								</div>
+
+
+							<div class="row">
+								<div class="col-md-12">
+									<div class="form-group">
+										<input type="submit" class="button_example" value="Monthly Report" ng-click="getalldatabymon();" />&nbsp;&nbsp;&nbsp;<input type="button" class="button_example" ng-click="resetfrm2()" value="CLEAR" />
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-12">
+									<div class="form-group">
+										<input type="submit" class="button_example" ng-click="getalldatabyyr();" value="Annual Report" />&nbsp;&nbsp;&nbsp;<input type="submit" class="button_example" ng-click="getalldatabyyr1();" value="Annual True Totals" />
+									</div>
+								</div>
+							</div>
+							<!-- Info Toggle Button + SEND button (only visible after Monthly Report loads) -->
+							<div class="row" ng-if="iv == 1">
+								<div class="col-md-12" style="margin-top: 10px;">
+									<input type="submit" class="button_example" value="SEND" ng-click="sendToGsheet();" />&nbsp;&nbsp;&nbsp;
+									<button type="button" class="info-toggle-btn" ng-class="{'active': infoToggle}" ng-click="toggleInfo()">
+										{{infoToggle ? 'Info: ON' : 'Info: OFF'}}
+									</button>
+									<span style="margin-left: 10px; color: #666; font-size: 12px;">
+										<span ng-if="infoToggle">Click on cells with value 0 or &lt;24 to add comments. Hover to see existing comments.</span>
+										<span ng-if="!infoToggle">Turn ON to see comment indicators and add comments.</span>
+									</span>
+								</div>
+							</div>
+							<!-- SEND feedback message -->
+							<div class="row" ng-if="iv == 1">
+								<div class="col-md-12">
+									<div id="sendGsheetMsg" style="margin-top: 5px;"></div>
+								</div>
+							</div>
+
+						</form>
+
+                  <div class="row" ng-if="iv == 1">
+					<div class="col-md-10">
+				      <div style="height: 350px; overflow-y: auto;">
+					    <table class="ctab" width="750" align="center"  border="1" bordercolor="#000000">
+						   <thead>
+						       <tr valign="center"><th align="center" colspan="{{lstids.length + 1}}">HF Radar Report Month - {{hfmon}} {{hfyr}}</th></tr>
+						       <tr valign="center"><th align="center" width="15">Dt.</th><th align="center" width="15" ng-repeat="lids in lstids">{{lids}}</th></tr>
+						   </thead>
+					      <tbody>
+					          <tr valign="center" ng-repeat="dat in rcdata" ng-if="hfrowflg==1">
+					            <th align="center" width="15" ng-if="$index>27">PERCENTAGE</th>
+					            <th align="center" width="15" ng-if="$index<=27">{{$index+1}}</th>
+					            <th align="center" width="15" ng-repeat="xdat in dat track by $index"
+					                ng-class="{'clickable-cell': infoToggle && $parent.$index <= 27 && (xdat == '0' || (xdat != '' && parseInt(xdat) < 24))}"
+					                ng-click="cellClick($parent.$index, $index, xdat)"
+					                ng-mouseenter="showTooltip($event, $parent.$index, $index)"
+					                ng-mouseleave="hideTooltip()"
+					                style="position: relative;">
+					                {{xdat}}<span ng-if="infoToggle && hasComment($parent.$index, $index)" class="comment-indicator">*</span>
+					            </th>
+					          </tr>
+					          <tr valign="center" ng-repeat="dat in rcdata" ng-if="hfrowflg==2">
+					            <th align="center" width="15" ng-if="$index>28">PERCENTAGE</th>
+					            <th align="center" width="15" ng-if="$index<=28">{{$index+1}}</th>
+					            <th align="center" width="15" ng-repeat="xdat in dat track by $index"
+					                ng-class="{'clickable-cell': infoToggle && $parent.$index <= 28 && (xdat == '0' || (xdat != '' && parseInt(xdat) < 24))}"
+					                ng-click="cellClick($parent.$index, $index, xdat)"
+					                ng-mouseenter="showTooltip($event, $parent.$index, $index)"
+					                ng-mouseleave="hideTooltip()"
+					                style="position: relative;">
+					                {{xdat}}<span ng-if="infoToggle && hasComment($parent.$index, $index)" class="comment-indicator">*</span>
+					            </th>
+					          </tr>
+					          <tr valign="center" ng-repeat="dat in rcdata" ng-if="hfrowflg==3">
+					            <th align="center" width="15" ng-if="$index>29">PERCENTAGE</th>
+					            <th align="center" width="15" ng-if="$index<=29">{{$index+1}}</th>
+					            <th align="center" width="15" ng-repeat="xdat in dat track by $index"
+					                ng-class="{'clickable-cell': infoToggle && $parent.$index <= 29 && (xdat == '0' || (xdat != '' && parseInt(xdat) < 24))}"
+					                ng-click="cellClick($parent.$index, $index, xdat)"
+					                ng-mouseenter="showTooltip($event, $parent.$index, $index)"
+					                ng-mouseleave="hideTooltip()"
+					                style="position: relative;">
+					                {{xdat}}<span ng-if="infoToggle && hasComment($parent.$index, $index)" class="comment-indicator">*</span>
+					            </th>
+					          </tr>
+					          <tr valign="center" ng-repeat="dat in rcdata" ng-if="hfrowflg==4">
+					            <th align="center" width="15" ng-if="$index>30">PERCENTAGE</th>
+					            <th align="center" width="15" ng-if="$index<=30">{{$index+1}}</th>
+					            <th align="center" width="15" ng-repeat="xdat in dat track by $index"
+					                ng-class="{'clickable-cell': infoToggle && $parent.$index <= 30 && (xdat == '0' || (xdat != '' && parseInt(xdat) < 24))}"
+					                ng-click="cellClick($parent.$index, $index, xdat)"
+					                ng-mouseenter="showTooltip($event, $parent.$index, $index)"
+					                ng-mouseleave="hideTooltip()"
+					                style="position: relative;">
+					                {{xdat}}<span ng-if="infoToggle && hasComment($parent.$index, $index)" class="comment-indicator">*</span>
+					            </th>
+					          </tr>
+						  </tbody>
+					    </table>
+			          </div>
+
+			          <!-- Data Source Summary Section (visible only when Info toggle is ON) -->
+			          <div ng-if="infoToggle && iv == 1" style="margin-top: 20px;">
+			            <h5 style="margin-bottom: 10px;">Data Source Summary (Most Recent per Site)</h5>
+			            <table class="source-summary-table" align="center">
+			              <thead>
+			                <tr>
+			                  <th>Site</th>
+			                  <th>Last Update</th>
+			                  <th>Source</th>
+			                  <th>Timestamp</th>
+			                </tr>
+			              </thead>
+			              <tbody>
+			                <tr ng-repeat="src in dataSourcesFull">
+			                  <td>{{src.site}}</td>
+			                  <td ng-style="src.date == 'None' ? {'color':'#999'} : {}">{{src.date}}</td>
+			                  <td ng-class="{'source-auto': src.source=='AUTO', 'source-qr': src.source=='QR', 'source-manual': src.source=='Manual'}"
+			                      ng-style="src.source == 'None' ? {'color':'#999'} : {}">{{src.source}}</td>
+			                  <td ng-style="src.timestamp == 'None' ? {'color':'#999'} : {}">{{src.timestamp}}</td>
+			                </tr>
+			              </tbody>
+			            </table>
+			          </div>
+
+			        </div>
+			      </div>
+
+			      <!-- Tooltip container -->
+			      <div id="cellTooltip" class="cell-tooltip" style="display: none;"></div>
+
+			      <!-- Comment Modal -->
+			      <div class="comment-modal-overlay" ng-if="showCommentModal" ng-click="closeCommentModal()">
+			        <div class="comment-modal" ng-click="$event.stopPropagation()">
+			          <h4>Comment for {{commentModalData.site}} - Day {{commentModalData.day}}</h4>
+			          <p style="color: #666; font-size: 12px;">Value: {{commentModalData.value}}</p>
+			          <textarea ng-model="commentModalData.text" placeholder="Enter reason for low/zero data..."></textarea>
+			          <div class="comment-modal-buttons">
+			            <button type="button" class="btn btn-default" ng-click="closeCommentModal()">Cancel</button>
+			            <button type="button" class="btn btn-primary" ng-click="saveComment()">Save</button>
+			          </div>
+			          <div id="commentSaveMsg" style="margin-top: 10px;"></div>
+			        </div>
+			      </div>
+
+			       <div class="row" ng-if="iv == 2">
+					<div class="col-md-11">
+				      <div id="rep2" style="height: 600px; width: 850px; overflow-y: auto;">
+
+			          </div>
+
+			        </div>
+			      </div>
+
+
+
+                  </div>
+			      <br>
+			    </div>
+			  </div>
+
+
+
+
+
+
+			<div ng-show="isSet(4)">
+			  <div id="rtabs" ng-controller="RTabsCtrl" class="panel panel-default menutab">
+			  <div class="well pnltab"><label>Custom Report (This is a customized report)</label></div>
+                    <div class="content">
+						<form name='rfform2' id="rfform2" >
+
+                              <div class="row">
+    									<div class="col-md-2">
+    										<div class="form-group">
+    											<label>From Range</label>
+    										</div>
+    									</div>
+    									<div class="col-md-1">
+    										<div class="form-group">
+    											<label>Month</label>
+    										</div>
+    									</div>
+    									<div class="col-md-3">
+    										<div class="form-group">
+    											<select  class="form-control" ng-model="form2.type" name="optlstmon21" id="optlstmon21">
+    											    <option ng-repeat="x in avmon2" value="{{x.smon}}">{{x.nm}}</option>
+
+    											</select>
+    										</div>
+    									</div>
+    									<div class="col-md-1">
+    										<div class="form-group">
+    											<label>Year</label>
+    										</div>
+    									</div>
+    									<div class="col-md-3">
+    										<div class="form-group" align="left">
+    											<select  class="form-control" name="optlstyr22" id="optlstyr22" ng-model="form21.type">
+    											    <option ng-repeat="x in avyr2" value="{{x.yrval}}">{{x.yr}}</option>
+
+    											</select>
+    										</div>
+    									</div>
+    									<div class="col-md-2">
+    										<div class="form-group">
+    											<label></label>
+    										</div>
+    									</div>
+    								</div>
+
+    								<div class="row">
+    								    <div class="col-md-2">
+    										<div class="form-group">
+    											<label>To Range</label>
+    										</div>
+    									</div>
+    									<div class="col-md-1">
+    										<div class="form-group">
+    											<label>Month</label>
+    										</div>
+    									</div>
+    									<div class="col-md-3">
+    										<div class="form-group">
+    											<select  class="form-control" ng-model="fform2.type" name="optlstmon23" id="optlstmon23">
+    											    <option ng-repeat="x in avmon1" value="{{x.smon}}">{{x.nm}}</option>
+
+    											</select>
+    										</div>
+    									</div>
+    									<div class="col-md-1">
+    										<div class="form-group">
+    											<label>Year</label>
+    										</div>
+    									</div>
+    									<div class="col-md-3">
+    										<div class="form-group" align="left">
+    											<select  class="form-control" name="optlstyr24" id="optlstyr24" ng-model="fform21.type">
+    											    <option ng-repeat="x in avyr1" value="{{x.yrval}}">{{x.yr}}</option>
+
+    											</select>
+    										</div>
+    									</div>
+    									<div class="col-md-2">
+    										<div class="form-group">
+    											<label></label>
+    										</div>
+    									</div>
+    								</div>
+
+							<div class="row">
+								<div class="col-md-9">
+									<div class="form-group">
+										<input type="submit" class="button_example" ng-click="getalldatabyyr2();" value="CUSTOM REPORT" />&nbsp;&nbsp;&nbsp;<input type="button" class="button_example" ng-click="resetfrm2()" value="CLEAR" />
+									</div>
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="col-md-9">
+									<div class="form-group">
+										<label><div id="crmsg3"></div></label>
+									</div>
+								</div>
+							</div>
+
+						</form>
+
+			       <div class="row" ng-if="iv1 == 2">
+					<div class="col-md-11">
+				      <div id="rep3" style="height: 500px; width: 850px; overflow-y: auto; overflow-x: auto;">
+
+			          </div>
+
+			        </div>
+			      </div>
+
+
+
+                  </div>
+			      <br>
+			    </div>
+			  </div>
+
+
+
+			  <div ng-show="isSet(5)">
+			  <div id="ytabs" ng-controller="YTabsCtrl" class="panel panel-default menutab">
+			  <div class="well pnltab"><label>Yearly Report </label></div>
+                    <div class="content">
+    			       <div class="row" ng-if="iv2 == 2">
+    					<div class="col-md-11">
+    				      <div id="rep4" style="height: 500px; width: 850px; overflow-y: auto; overflow-x: auto;">
+
+    			          </div>
+
+    			        </div>
+    			      </div>
+
+
+
+                  </div>
+			      <br>
+			    </div>
+			  </div>
+
+			  <div ng-show="isSet(6)">
+			  <div id="atabs" ng-controller="ATabsCtrl" class="panel panel-default menutab">
+			  <div class="well pnltab"><label>About Us </label></div>
+                    <div class="content">
+    			       <div class="row" ng-if="iv2 == 2">
+    					<div class="col-md-12">
+    				      <div id="rep6" align="center" style="height: 730px; width: 850px; overflow-y: auto; overflow-x: auto;">
+                            <table>
+                                <tr style="background-color:#cc9900"><td><b>About</b></td><td><b>Benefits</b></td></tr>
+                                <tr valign="center"><td width="425"style="background-color:#d9d9d9" align="left">
+                                    <table>
+                                        <tr><td align="left">It is a web-based Monthly report monitoring system that allows authorized users to display and manage all monthly and yearly data of all remote sites of ICORN. </td></tr>
+                                        <tr><td align="left">The system consists of a Online Server for storing data count, an Automated script at each remote site computer and a Mobile application provided to the site Technician. </td></tr>
+                                        <tr><td align="left">At set period Automated script at the remote computer gets activated and counts radial data which is above 20Kb (optional feature) in size for quality assurance (QA) accurately and sends it to the server via the internet.</td></tr>
+                                        <tr><td align="left">The existing server can handle up to 10 sites; it is expandable up to 20 more sites. The following is the explanation of each part of the system.</td></tr>
+                                        <tr><td align="left">User-friendly web-based interface to easily display and manage historical and real-time data. </td></tr>
+                                        <tr><td align="left">It receives data from all remote sites periodically from automated scripts or Android mobile phones and displays data in the desired format required for monthly reports. </td></tr>
+                                        <tr><td align="left">It stores data from  past years which can be accessed anytime and anywhere. </td></tr>
+                                        <tr><td align="left">Server stores only the data count of files and not actual data for Security purposes. </td></tr>
+                                        <tr><td align="left">The received data count is represented in Monthly and Yearly format.</td></tr>
+                                        <tr><td align="left">Access to the web server and its functionalities is completely password protected.</td></tr></table></td>
+                                <td width="425" align="left" style="background-color:#ffff99"><table><tr><td align="left">1) Reduce human error for file counting.</td></tr>
+                                    <tr><td align="left">2) Accurate Quality Assurance flag ( for eliminating file count for file size less than 20kB optional features)</td></tr>
+                                    <tr><td align="left">3) On time Report generation and maintain history of data generated</td></tr>
+                                    <tr><td align="left">4) Report updates even when site Internet down and during absence of site technician</td></tr>
+                                    <tr><td align="left">5) True totals report is useful to verify data available at Central Server. </td></tr></table></td></tr>
+                                <tr style="background-color:#ff9966"><td colspan="2"><b>Developed By</b></td></tr>
+                    			<tr><td style="background-color:#ff0080"><b>Automated Script</b></td><td style="background-color:#ffcccc">Vishal Jain (vishal9516jn@gmail.com)</td></tr>
+                    			<tr><td style="background-color:#ff0080"><b>Web Server and Mobile Application</b></td><td style="background-color:#ffcccc">Sachin Prabhu (pssachin23@gmail.com)</td></tr>
+                    			<tr style="background-color:#ff9966"><td><b>Name</b></td><td><b>Contact Details</b></td></tr>
+                    			<tr><td style="background-color:#ff0080"><b>Vishal Jain</b></td><td style="background-color:#ffcccc">Mobile: 9004994662</td></tr>
+                    			<tr><td style="background-color:#ff0080"><b>Sachin Prabhu</b></td><td style="background-color:#ffcccc">Mobile: 9833163255</td></tr>
+                            </table>
+    			          </div>
+
+    			        </div>
+    			      </div>
+
+
+
+                  </div>
+			      <br>
+			    </div>
+			  </div>
+
+
+
+
+
+
+
+		</div>
+	</div>
+</div>
+</div>
+
+<script type="text/javascript" src="../static/js/configangular.js"></script>
+</body>
+</html>
