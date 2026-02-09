@@ -494,13 +494,15 @@
 								<div class="panel panel-info">
 									<div class="panel-heading"><strong>&#128640; Update Code from GitHub</strong></div>
 									<div class="panel-body">
-										<p>Pull the latest code from GitHub repository. This will:</p>
+										<p>Pull the latest code from GitHub repository. <strong style="color:#dc3545;">IMPORTANT:</strong> Database is preserved during update!</p>
+										<p><strong>Automatic Update Process:</strong></p>
 										<ol>
-											<li><strong>Auto-download a database backup</strong> (to protect your data)</li>
-											<li><strong>Pull latest code</strong> from GitHub (app.py, templates, etc.)</li>
-											<li><strong>Auto-reload the web app</strong> (if API token is configured - see SETUP_AUTO_RELOAD.md)</li>
+											<li><strong>Auto-download database backup</strong> (saved to your computer for safety)</li>
+											<li><strong>Pull latest code from GitHub</strong> (database is preserved via git stash)</li>
+											<li><strong>Restore the backup</strong> (you'll do this manually from section above)</li>
+											<li><strong>Reload the web app</strong> (click the "Reload Web App" button that appears)</li>
 										</ol>
-										<p style="color: #28a745;"><strong>&#9989; Auto-Reload:</strong> If you've set up the PythonAnywhere API token, the web app will reload automatically. Otherwise, you'll need to reload manually from the Web tab.</p>
+										<p style="color: #0066cc;"><strong>&#8505; Note:</strong> The database file on GitHub is old. We protect your current database by stashing it during git pull, so your live data is never overwritten!</p>
 										<button class="btn btn-info btn-lg" ng-click="updateFromGithub()">
 											<span style="font-size: 18px;">&#128640;</span> Update from GitHub
 										</button>

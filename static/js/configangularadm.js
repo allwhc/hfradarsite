@@ -477,13 +477,13 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
         reader.readAsText(file);
     }
 
-    // Update from GitHub (auto-download backup first, then git pull)
+    // Update from GitHub (auto-download backup first, then git pull, then restore, then reload)
     $scope.updateFromGithub = function() {
-        if(!confirm("This will update your code from GitHub.\n\n1. Database backup will be auto-downloaded\n2. Latest code will be pulled from GitHub\n3. You must reload the web app from PythonAnywhere\n\nContinue?")) {
+        if(!confirm("This will update your code from GitHub.\n\n1. Database backup will be auto-downloaded\n2. Latest code will be pulled from GitHub\n3. You'll restore the backup\n4. Web app will reload\n\nContinue?")) {
             return;
         }
 
-        document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:blue;">Step 1/2: Downloading database backup...</span>';
+        document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:blue;">Step 1/3: Downloading database backup...</span>';
 
         var cfig = {
             headers: {
@@ -491,11 +491,15 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
             }
         };
 
+        var backupTimestamp = '';
+
         // Step 1: Download backup first
         $http.post("admin/downloadBackup", "{}", cfig).then(
             function(response) {
                 var resp = response.data;
                 if(resp.stat == "success") {
+                    backupTimestamp = resp.timestamp;
+
                     // Auto-download the backup file
                     var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resp.backup, null, 2));
                     var downloadAnchorNode = document.createElement('a');
@@ -505,38 +509,27 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
                     downloadAnchorNode.click();
                     downloadAnchorNode.remove();
 
-                    // Step 2: Now pull from GitHub
-                    document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:blue;">Step 2/2: Pulling latest code from GitHub...</span>';
+                    // Step 2: Now pull from GitHub (database will be preserved via git stash)
+                    document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:blue;">Step 2/3: Pulling latest code from GitHub (preserving database)...</span>';
 
                     $http.post("admin/pullFromGithub", "{}", cfig).then(
                         function(gitResponse) {
                             var gitResp = gitResponse.data;
                             if(gitResp.stat == "success") {
-                                var msg = '<div style="color:green; font-weight:bold;">&#10004; Update Successful!</div>';
-                                msg += '<div style="margin-top:10px;">&#128190; Database backup saved: hfradar_backup_' + resp.timestamp + '.json</div>';
-                                msg += '<div style="margin-top:5px;">&#128640; Code updated from GitHub</div>';
-
-                                // Show reload status
-                                if(gitResp.reload_status == "success") {
-                                    msg += '<div style="margin-top:10px; color:green;">&#10004; Web app reloaded automatically!</div>';
-                                    msg += '<div style="margin-top:15px; padding:10px; background-color:#d4edda; border:1px solid #28a745; border-radius:5px;">';
-                                    msg += '<strong style="color:#155724;">&#9989; All Done!</strong><br>';
-                                    msg += '<span style="color:#155724;">Your site is now running the latest code from GitHub. Refresh this page to see any UI changes.</span>';
-                                    msg += '</div>';
-                                } else if(gitResp.reload_status == "failed") {
-                                    msg += '<div style="margin-top:10px; color:orange;">&#9888; ' + gitResp.reload_msg + '</div>';
-                                    msg += '<div style="margin-top:15px; padding:10px; background-color:#fff3cd; border:1px solid #ffc107; border-radius:5px;">';
-                                    msg += '<strong style="color:#856404;">&#9888; Manual Reload Required:</strong><br>';
-                                    msg += '<span style="color:#856404;">Go to PythonAnywhere Web tab and click the <strong>"Reload"</strong> button to apply changes!</span>';
-                                    msg += '</div>';
-                                } else {
-                                    msg += '<div style="margin-top:10px; color:#666;">&#8505; ' + gitResp.reload_msg + '</div>';
-                                    msg += '<div style="margin-top:15px; padding:10px; background-color:#fff3cd; border:1px solid #ffc107; border-radius:5px;">';
-                                    msg += '<strong style="color:#856404;">&#9888; Manual Reload Required:</strong><br>';
-                                    msg += '<span style="color:#856404;">Go to PythonAnywhere Web tab and click the <strong>"Reload"</strong> button to apply changes!</span>';
-                                    msg += '</div>';
-                                }
-
+                                // Step 3: Prompt user to restore backup
+                                var msg = '<div style="color:green; font-weight:bold;">&#10004; Code Updated Successfully!</div>';
+                                msg += '<div style="margin-top:10px;">&#128190; Database backup downloaded: hfradar_backup_' + backupTimestamp + '.json</div>';
+                                msg += '<div style="margin-top:5px;">&#128640; Code pulled from GitHub (database preserved)</div>';
+                                msg += '<div style="margin-top:20px; padding:15px; background-color:#fff3cd; border:2px solid #ffc107; border-radius:5px;">';
+                                msg += '<strong style="color:#856404; font-size:16px;">&#9888; IMPORTANT - Next Steps:</strong><br>';
+                                msg += '<ol style="color:#856404; margin-top:10px; margin-bottom:10px;">';
+                                msg += '<li style="margin-bottom:8px;">Go to <strong>"Restore Database from Backup"</strong> section above</li>';
+                                msg += '<li style="margin-bottom:8px;">Select the backup file you just downloaded: <code>hfradar_backup_' + backupTimestamp + '.json</code></li>';
+                                msg += '<li style="margin-bottom:8px;">Click <strong>"Restore from Backup"</strong></li>';
+                                msg += '<li style="margin-bottom:8px;">After restore completes, click <strong>"Reload Web App"</strong> button below</li>';
+                                msg += '</ol>';
+                                msg += '</div>';
+                                msg += '<div style="margin-top:15px;"><button class="btn btn-success btn-lg" onclick="angular.element(this).scope().reloadWebApp()"><span style="font-size:18px;">&#128259;</span> Reload Web App</button></div>';
                                 if(gitResp.git_output) {
                                     msg += '<div style="margin-top:10px; font-size:12px; color:#666;">Git output: ' + gitResp.git_output.substring(0, 200) + '</div>';
                                 }
@@ -556,6 +549,42 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
             },
             function(error) {
                 document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:red;">Error downloading backup. Update cancelled.</span>';
+                console.log(error);
+            }
+        );
+    }
+
+    // Reload web app (called after user restores backup)
+    $scope.reloadWebApp = function() {
+        if(!confirm("Have you restored the backup?\n\nIf yes, the web app will now reload with the latest code and your restored data.")) {
+            return;
+        }
+
+        document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:blue;">Reloading web app...</span>';
+
+        var cfig = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        $http.post("admin/reloadWebApp", "{}", cfig).then(
+            function(response) {
+                var resp = response.data;
+                if(resp.stat == "success") {
+                    var msg = '<div style="color:green; font-weight:bold; font-size:18px;">&#9989; Update Complete!</div>';
+                    msg += '<div style="margin-top:15px; padding:15px; background-color:#d4edda; border:2px solid #28a745; border-radius:5px;">';
+                    msg += '<strong style="color:#155724; font-size:16px;">&#10004; All Done!</strong><br>';
+                    msg += '<p style="color:#155724; margin-top:10px;">Your site is now running the latest code from GitHub with your restored database.</p>';
+                    msg += '<p style="color:#155724;"><strong>Refresh this page</strong> to see any UI changes.</p>';
+                    msg += '</div>';
+                    document.getElementById("githubUpdateMsg").innerHTML = msg;
+                } else {
+                    document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:red;">Error: ' + resp.msg + '</span>';
+                }
+            },
+            function(error) {
+                document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:red;">Error reloading web app. Please try again or reload manually from PythonAnywhere.</span>';
                 console.log(error);
             }
         );
