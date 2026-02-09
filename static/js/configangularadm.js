@@ -514,16 +514,16 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
                         function(reloadResponse) {
                             var reloadResp = reloadResponse.data;
                             if(reloadResp.stat == "success") {
-                                // Success!
+                                // Success! Reload initiated
                                 var msg = '<div style="color:green; font-weight:bold; font-size:18px;">&#9989; Update Complete!</div>';
                                 msg += '<div style="margin-top:15px; padding:15px; background-color:#d4edda; border:2px solid #28a745; border-radius:5px;">';
                                 msg += '<strong style="color:#155724; font-size:16px;">&#10004; All Done!</strong><br>';
                                 msg += '<ul style="color:#155724; margin-top:10px; text-align:left;">';
                                 msg += '<li>✅ Code updated from GitHub</li>';
                                 msg += '<li>✅ Database preserved (no changes)</li>';
-                                msg += '<li>✅ Web app reloaded automatically</li>';
+                                msg += '<li>✅ Web app reload initiated</li>';
                                 msg += '</ul>';
-                                msg += '<p style="color:#155724; margin-top:10px;"><strong>Refresh this page</strong> to see any UI changes.</p>';
+                                msg += '<p style="color:#155724; margin-top:15px;"><strong>⏳ Please wait 15-30 seconds for reload to complete, then refresh this page.</strong></p>';
                                 msg += '</div>';
                                 if(gitResp.git_output) {
                                     msg += '<div style="margin-top:10px; font-size:12px; color:#666;">Git output: ' + gitResp.git_output.substring(0, 200) + '</div>';

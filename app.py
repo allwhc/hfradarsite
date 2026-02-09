@@ -1791,43 +1791,46 @@ def adminPullFromGithub():
 # Admin API: Reload PythonAnywhere web app (called after user restores backup)
 @app.route("/admin/reloadWebApp", methods=['POST'])
 def adminReloadWebApp():
+    import threading
+
+    def do_reload():
+        """Background thread to perform the reload after response is sent"""
+        import time
+        time.sleep(1)  # Wait for response to be sent
+        try:
+            if PYTHONANYWHERE_API_TOKEN:
+                reload_url = f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_DOMAIN}/reload/'
+                headers = {'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'}
+                reload_response = requests.post(reload_url, headers=headers, timeout=30)
+                print(f"Reload completed with status: {reload_response.status_code}")
+        except Exception as e:
+            print(f"Background reload error: {e}")
+
     try:
         if PYTHONANYWHERE_API_TOKEN:
-            reload_url = f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_DOMAIN}/reload/'
-            headers = {'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'}
-            # Increase timeout to 30 seconds - reload can take time
-            reload_response = requests.post(reload_url, headers=headers, timeout=30)
+            # Start reload in background thread (non-blocking)
+            reload_thread = threading.Thread(target=do_reload)
+            reload_thread.daemon = True
+            reload_thread.start()
 
-            if reload_response.status_code == 200:
-                return json.dumps({
-                    'sel': 'adminReloadWebApp',
-                    'stat': 'success',
-                    'msg': 'Web app reloaded successfully! Refresh this page to see changes.'
-                })
-            else:
-                return json.dumps({
-                    'sel': 'adminReloadWebApp',
-                    'stat': 'error',
-                    'msg': f'Reload failed (HTTP {reload_response.status_code}). Please reload manually from PythonAnywhere Web tab.'
-                })
+            # Return success immediately (before reload happens)
+            return json.dumps({
+                'sel': 'adminReloadWebApp',
+                'stat': 'success',
+                'msg': 'Reload initiated! The web app will restart in a few seconds. Please wait 15-30 seconds, then refresh this page.'
+            })
         else:
             return json.dumps({
                 'sel': 'adminReloadWebApp',
                 'stat': 'error',
                 'msg': 'API token not configured. Please reload manually from PythonAnywhere Web tab.'
             })
-    except requests.exceptions.Timeout:
-        return json.dumps({
-            'sel': 'adminReloadWebApp',
-            'stat': 'error',
-            'msg': 'Reload request timed out after 30 seconds. The reload may still be in progress - please wait a moment and try again.'
-        })
     except Exception as e:
-        print("Error reloading web app:", e)
+        print("Error initiating reload:", e)
         return json.dumps({
             'sel': 'adminReloadWebApp',
             'stat': 'error',
-            'msg': 'Failed to reload: ' + str(e) + '. Please reload manually from PythonAnywhere Web tab.'
+            'msg': 'Failed to initiate reload: ' + str(e) + '. Please reload manually from PythonAnywhere Web tab.'
         })
 
 # ============ END DATABASE BACKUP & RESTORE APIs ============
