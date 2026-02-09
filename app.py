@@ -1825,6 +1825,22 @@ def adminReloadWebApp():
 
 # ============ END DATABASE BACKUP & RESTORE APIs ============
 
+# DEBUG ENDPOINT: Check environment variables (TEMPORARY - for troubleshooting)
+@app.route("/admin/debugEnv", methods=['GET'])
+def adminDebugEnv():
+    import os
+    token = os.environ.get('PA_API_TOKEN', '')
+    return json.dumps({
+        'PA_USERNAME': os.environ.get('PA_USERNAME', 'NOT_SET'),
+        'PA_DOMAIN': os.environ.get('PA_DOMAIN', 'NOT_SET'),
+        'PA_API_TOKEN_LENGTH': len(token),
+        'PA_API_TOKEN_FIRST_10': token[:10] if token else 'NOT_SET',
+        'PYTHONANYWHERE_USERNAME': PYTHONANYWHERE_USERNAME,
+        'PYTHONANYWHERE_DOMAIN': PYTHONANYWHERE_DOMAIN,
+        'PYTHONANYWHERE_API_TOKEN_LENGTH': len(PYTHONANYWHERE_API_TOKEN),
+        'PYTHONANYWHERE_API_TOKEN_FIRST_10': PYTHONANYWHERE_API_TOKEN[:10] if PYTHONANYWHERE_API_TOKEN else 'EMPTY'
+    })
+
 def realTotals(a,b):
     e=hex(int(a, 16) & int(b, 16))
     n=int(str(e),16)
