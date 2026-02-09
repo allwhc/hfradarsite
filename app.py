@@ -1,7 +1,7 @@
 from flask import Flask,request,json,send_file,render_template
 from flask_cors import CORS, cross_origin
 from xlwt import Workbook
-import os,math,smtplib,os.path,sqlite3,subprocess
+import os,math,smtplib,os.path,sqlite3,subprocess,requests
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
@@ -15,6 +15,12 @@ app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
 # Database path
 DB_PATH = '/home/hfradarsite/deploy/users.db'
+
+# PythonAnywhere API Configuration (for auto-reload)
+# Set these environment variables in PythonAnywhere bash or in a .env file
+PYTHONANYWHERE_USERNAME = os.environ.get('PA_USERNAME', 'hfradarsite')  # Your PythonAnywhere username
+PYTHONANYWHERE_DOMAIN = os.environ.get('PA_DOMAIN', 'hfradarsite.pythonanywhere.com')  # Your domain
+PYTHONANYWHERE_API_TOKEN = os.environ.get('PA_API_TOKEN', '')  # Your API token from PythonAnywhere Account page
 
 # Database helper functions
 def upd_qry(sql):
@@ -1710,7 +1716,7 @@ def adminRestoreBackup():
         print("Error restoring backup:", e)
         return json.dumps({'sel': 'adminRestoreBackup', 'stat': 'error', 'msg': 'Failed to restore backup: ' + str(e)})
 
-# Admin API: Pull latest code from GitHub
+# Admin API: Pull latest code from GitHub and auto-reload PythonAnywhere
 @app.route("/admin/pullFromGithub", methods=['POST'])
 def adminPullFromGithub():
     try:
@@ -1729,11 +1735,36 @@ def adminPullFromGithub():
         # Check if git pull was successful
         if result.returncode == 0:
             output = result.stdout + result.stderr
+
+            # Try to auto-reload PythonAnywhere web app if API token is configured
+            reload_status = 'not_attempted'
+            reload_msg = ''
+
+            if PYTHONANYWHERE_API_TOKEN:
+                try:
+                    reload_url = f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_DOMAIN}/reload/'
+                    headers = {'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'}
+                    reload_response = requests.post(reload_url, headers=headers, timeout=10)
+
+                    if reload_response.status_code == 200:
+                        reload_status = 'success'
+                        reload_msg = 'Web app reloaded automatically!'
+                    else:
+                        reload_status = 'failed'
+                        reload_msg = f'Auto-reload failed (HTTP {reload_response.status_code}). Please reload manually from PythonAnywhere Web tab.'
+                except Exception as reload_err:
+                    reload_status = 'failed'
+                    reload_msg = f'Auto-reload failed: {str(reload_err)}. Please reload manually from PythonAnywhere Web tab.'
+            else:
+                reload_msg = 'API token not configured. Please reload manually from PythonAnywhere Web tab.'
+
             return json.dumps({
                 'sel': 'adminPullFromGithub',
                 'stat': 'success',
                 'msg': 'Code updated successfully from GitHub!',
-                'git_output': output
+                'git_output': output,
+                'reload_status': reload_status,
+                'reload_msg': reload_msg
             })
         else:
             return json.dumps({

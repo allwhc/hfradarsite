@@ -515,10 +515,28 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
                                 var msg = '<div style="color:green; font-weight:bold;">&#10004; Update Successful!</div>';
                                 msg += '<div style="margin-top:10px;">&#128190; Database backup saved: hfradar_backup_' + resp.timestamp + '.json</div>';
                                 msg += '<div style="margin-top:5px;">&#128640; Code updated from GitHub</div>';
-                                msg += '<div style="margin-top:15px; padding:10px; background-color:#fff3cd; border:1px solid #ffc107; border-radius:5px;">';
-                                msg += '<strong style="color:#856404;">&#9888; IMPORTANT - Next Step:</strong><br>';
-                                msg += '<span style="color:#856404;">Go to PythonAnywhere Web tab and click the <strong>"Reload"</strong> button to apply changes!</span>';
-                                msg += '</div>';
+
+                                // Show reload status
+                                if(gitResp.reload_status == "success") {
+                                    msg += '<div style="margin-top:10px; color:green;">&#10004; Web app reloaded automatically!</div>';
+                                    msg += '<div style="margin-top:15px; padding:10px; background-color:#d4edda; border:1px solid #28a745; border-radius:5px;">';
+                                    msg += '<strong style="color:#155724;">&#9989; All Done!</strong><br>';
+                                    msg += '<span style="color:#155724;">Your site is now running the latest code from GitHub. Refresh this page to see any UI changes.</span>';
+                                    msg += '</div>';
+                                } else if(gitResp.reload_status == "failed") {
+                                    msg += '<div style="margin-top:10px; color:orange;">&#9888; ' + gitResp.reload_msg + '</div>';
+                                    msg += '<div style="margin-top:15px; padding:10px; background-color:#fff3cd; border:1px solid #ffc107; border-radius:5px;">';
+                                    msg += '<strong style="color:#856404;">&#9888; Manual Reload Required:</strong><br>';
+                                    msg += '<span style="color:#856404;">Go to PythonAnywhere Web tab and click the <strong>"Reload"</strong> button to apply changes!</span>';
+                                    msg += '</div>';
+                                } else {
+                                    msg += '<div style="margin-top:10px; color:#666;">&#8505; ' + gitResp.reload_msg + '</div>';
+                                    msg += '<div style="margin-top:15px; padding:10px; background-color:#fff3cd; border:1px solid #ffc107; border-radius:5px;">';
+                                    msg += '<strong style="color:#856404;">&#9888; Manual Reload Required:</strong><br>';
+                                    msg += '<span style="color:#856404;">Go to PythonAnywhere Web tab and click the <strong>"Reload"</strong> button to apply changes!</span>';
+                                    msg += '</div>';
+                                }
+
                                 if(gitResp.git_output) {
                                     msg += '<div style="margin-top:10px; font-size:12px; color:#666;">Git output: ' + gitResp.git_output.substring(0, 200) + '</div>';
                                 }
