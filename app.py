@@ -1795,7 +1795,8 @@ def adminReloadWebApp():
         if PYTHONANYWHERE_API_TOKEN:
             reload_url = f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_DOMAIN}/reload/'
             headers = {'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'}
-            reload_response = requests.post(reload_url, headers=headers, timeout=10)
+            # Increase timeout to 30 seconds - reload can take time
+            reload_response = requests.post(reload_url, headers=headers, timeout=30)
 
             if reload_response.status_code == 200:
                 return json.dumps({
@@ -1815,6 +1816,12 @@ def adminReloadWebApp():
                 'stat': 'error',
                 'msg': 'API token not configured. Please reload manually from PythonAnywhere Web tab.'
             })
+    except requests.exceptions.Timeout:
+        return json.dumps({
+            'sel': 'adminReloadWebApp',
+            'stat': 'error',
+            'msg': 'Reload request timed out after 30 seconds. The reload may still be in progress - please wait a moment and try again.'
+        })
     except Exception as e:
         print("Error reloading web app:", e)
         return json.dumps({

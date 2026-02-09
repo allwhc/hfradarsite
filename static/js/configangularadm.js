@@ -488,7 +488,8 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
         var cfig = {
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            timeout: 60000  // 60 second timeout for git pull
         };
 
         // Step 1: Pull from GitHub (database is automatically preserved via git stash)
@@ -496,10 +497,20 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
             function(gitResponse) {
                 var gitResp = gitResponse.data;
                 if(gitResp.stat == "success") {
-                    // Step 2: Auto-reload the web app
-                    document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:blue;">Step 2/2: Reloading web app...</span>';
+                    // Step 2: Auto-reload the web app (this can take 15-30 seconds)
+                    var msg = '<div style="color:blue; font-weight:bold;">Step 2/2: Reloading web app...</div>';
+                    msg += '<div style="margin-top:10px; color:#666;"><span class="loading-dots">Please wait, this may take up to 30 seconds</span></div>';
+                    document.getElementById("githubUpdateMsg").innerHTML = msg;
 
-                    $http.post("admin/reloadWebApp", "{}", cfig).then(
+                    // Configure with longer timeout for reload
+                    var reloadCfig = {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        timeout: 45000  // 45 second timeout for reload
+                    };
+
+                    $http.post("admin/reloadWebApp", "{}", reloadCfig).then(
                         function(reloadResponse) {
                             var reloadResp = reloadResponse.data;
                             if(reloadResp.stat == "success") {
@@ -519,29 +530,14 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
                                 }
                                 document.getElementById("githubUpdateMsg").innerHTML = msg;
                             } else {
-                                // Reload failed
-                                var msg = '<div style="color:orange; font-weight:bold;">⚠ Code Updated, Manual Reload Needed</div>';
-                                msg += '<div style="margin-top:10px;">✅ Code pulled from GitHub successfully</div>';
-                                msg += '<div style="margin-top:10px;">✅ Database preserved</div>';
-                                msg += '<div style="margin-top:15px; padding:10px; background-color:#fff3cd; border:1px solid #ffc107; border-radius:5px;">';
-                                msg += '<strong style="color:#856404;">⚠ Auto-reload failed:</strong><br>';
-                                msg += '<span style="color:#856404;">' + reloadResp.msg + '</span><br><br>';
-                                msg += '<span style="color:#856404;">Please go to PythonAnywhere Web tab and click the <strong>"Reload"</strong> button manually.</span>';
-                                msg += '</div>';
-                                document.getElementById("githubUpdateMsg").innerHTML = msg;
+                                // Reload failed - show manual reload button
+                                $scope.showManualReloadOption(reloadResp.msg);
                             }
                         },
                         function(error) {
-                            // Reload request failed
-                            var msg = '<div style="color:orange; font-weight:bold;">⚠ Code Updated, Manual Reload Needed</div>';
-                            msg += '<div style="margin-top:10px;">✅ Code pulled from GitHub successfully</div>';
-                            msg += '<div style="margin-top:10px;">✅ Database preserved</div>';
-                            msg += '<div style="margin-top:15px; padding:10px; background-color:#fff3cd; border:1px solid #ffc107; border-radius:5px;">';
-                            msg += '<strong style="color:#856404;">⚠ Auto-reload failed</strong><br>';
-                            msg += '<span style="color:#856404;">Please go to PythonAnywhere Web tab and click the <strong>"Reload"</strong> button manually.</span>';
-                            msg += '</div>';
-                            document.getElementById("githubUpdateMsg").innerHTML = msg;
-                            console.log(error);
+                            // Reload request failed or timed out - show manual reload button
+                            var errorMsg = error.status === -1 ? 'Request timed out after 45 seconds' : 'Connection error';
+                            $scope.showManualReloadOption(errorMsg);
                         }
                     );
                 } else {
@@ -551,6 +547,53 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
             function(error) {
                 document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:red;">Error communicating with server during git pull.</span>';
                 console.log(error);
+            }
+        );
+    }
+
+    // Show manual reload option with button
+    $scope.showManualReloadOption = function(errorMsg) {
+        var msg = '<div style="color:orange; font-weight:bold;">⚠ Code Updated, Manual Reload Available</div>';
+        msg += '<div style="margin-top:10px;">✅ Code pulled from GitHub successfully</div>';
+        msg += '<div style="margin-top:10px;">✅ Database preserved</div>';
+        msg += '<div style="margin-top:15px; padding:15px; background-color:#fff3cd; border:2px solid #ffc107; border-radius:5px;">';
+        msg += '<strong style="color:#856404;">⚠ Auto-reload issue:</strong><br>';
+        msg += '<span style="color:#856404;">' + errorMsg + '</span><br><br>';
+        msg += '<p style="color:#856404; margin-bottom:15px;">Choose an option below:</p>';
+        msg += '<button class="btn btn-warning btn-lg" onclick="angular.element(this).scope().manualReloadWebApp()" style="margin-right:10px;"><span style="font-size:16px;">&#128259;</span> Try Reload Again</button>';
+        msg += '<p style="color:#666; margin-top:15px; font-size:13px;">Or manually reload from <a href="https://www.pythonanywhere.com/user/hfradarsite/webapps/" target="_blank">PythonAnywhere Web tab</a></p>';
+        msg += '</div>';
+        document.getElementById("githubUpdateMsg").innerHTML = msg;
+    }
+
+    // Manual reload function (called by button)
+    $scope.manualReloadWebApp = function() {
+        document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:blue;">Attempting to reload web app... Please wait up to 45 seconds...</span>';
+
+        var cfig = {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            timeout: 45000
+        };
+
+        $http.post("admin/reloadWebApp", "{}", cfig).then(
+            function(response) {
+                var resp = response.data;
+                if(resp.stat == "success") {
+                    var msg = '<div style="color:green; font-weight:bold; font-size:18px;">&#9989; Reload Successful!</div>';
+                    msg += '<div style="margin-top:15px; padding:15px; background-color:#d4edda; border:2px solid #28a745; border-radius:5px;">';
+                    msg += '<strong style="color:#155724; font-size:16px;">&#10004; Web app reloaded!</strong><br>';
+                    msg += '<p style="color:#155724; margin-top:10px;"><strong>Refresh this page</strong> to see the changes.</p>';
+                    msg += '</div>';
+                    document.getElementById("githubUpdateMsg").innerHTML = msg;
+                } else {
+                    $scope.showManualReloadOption(resp.msg);
+                }
+            },
+            function(error) {
+                var errorMsg = error.status === -1 ? 'Request timed out. The reload may still be in progress.' : 'Connection error: ' + error.statusText;
+                $scope.showManualReloadOption(errorMsg);
             }
         );
     }
