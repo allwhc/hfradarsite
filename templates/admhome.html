@@ -492,17 +492,16 @@
 						<div class="row">
 							<div class="col-md-12">
 								<div class="panel panel-info">
-									<div class="panel-heading"><strong>&#128640; Update Code from GitHub</strong></div>
+									<div class="panel-heading"><strong>&#128640; Update Code from GitHub (Fully Automatic)</strong></div>
 									<div class="panel-body">
-										<p>Pull the latest code from GitHub repository. <strong style="color:#dc3545;">IMPORTANT:</strong> Database is preserved during update!</p>
-										<p><strong>Automatic Update Process:</strong></p>
+										<p><strong style="color:#28a745;">✅ One-Click Update!</strong> Everything happens automatically:</p>
 										<ol>
-											<li><strong>Auto-download database backup</strong> (saved to your computer for safety)</li>
-											<li><strong>Pull latest code from GitHub</strong> (database is preserved via git stash)</li>
-											<li><strong>Restore the backup</strong> (you'll do this manually from section above)</li>
-											<li><strong>Reload the web app</strong> (click the "Reload Web App" button that appears)</li>
+											<li><strong>Pull latest code from GitHub</strong> (app.py, templates, static files, etc.)</li>
+											<li><strong>Preserve your database</strong> automatically via git stash (no data loss!)</li>
+											<li><strong>Reload web app</strong> automatically via PythonAnywhere API</li>
 										</ol>
-										<p style="color: #0066cc;"><strong>&#8505; Note:</strong> The database file on GitHub is old. We protect your current database by stashing it during git pull, so your live data is never overwritten!</p>
+										<p style="color: #0066cc;"><strong>&#8505; How it works:</strong> Git stash temporarily hides users.db during pull, then restores it afterward. Your database is <strong>never overwritten</strong> by the old database from GitHub!</p>
+										<p style="color: #dc3545;"><strong>⚠ After update:</strong> Refresh this page to see any UI changes.</p>
 										<button class="btn btn-info btn-lg" ng-click="updateFromGithub()">
 											<span style="font-size: 18px;">&#128640;</span> Update from GitHub
 										</button>
