@@ -59,6 +59,7 @@ amyApp.controller('aTabController', function ($scope, $http) {
             document.getElementById("dbbackup").className = "list-group-item active";
             document.getElementById("downloadMsg").innerHTML = "";
             document.getElementById("uploadMsg").innerHTML = "";
+            document.getElementById("githubUpdateMsg").innerHTML = "";
         }
     }
 
@@ -474,6 +475,72 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
         };
 
         reader.readAsText(file);
+    }
+
+    // Update from GitHub (auto-download backup first, then git pull)
+    $scope.updateFromGithub = function() {
+        if(!confirm("This will update your code from GitHub.\n\n1. Database backup will be auto-downloaded\n2. Latest code will be pulled from GitHub\n3. You must reload the web app from PythonAnywhere\n\nContinue?")) {
+            return;
+        }
+
+        document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:blue;">Step 1/2: Downloading database backup...</span>';
+
+        var cfig = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        // Step 1: Download backup first
+        $http.post("admin/downloadBackup", "{}", cfig).then(
+            function(response) {
+                var resp = response.data;
+                if(resp.stat == "success") {
+                    // Auto-download the backup file
+                    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resp.backup, null, 2));
+                    var downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", "hfradar_backup_" + resp.timestamp + ".json");
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+
+                    // Step 2: Now pull from GitHub
+                    document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:blue;">Step 2/2: Pulling latest code from GitHub...</span>';
+
+                    $http.post("admin/pullFromGithub", "{}", cfig).then(
+                        function(gitResponse) {
+                            var gitResp = gitResponse.data;
+                            if(gitResp.stat == "success") {
+                                var msg = '<div style="color:green; font-weight:bold;">&#10004; Update Successful!</div>';
+                                msg += '<div style="margin-top:10px;">&#128190; Database backup saved: hfradar_backup_' + resp.timestamp + '.json</div>';
+                                msg += '<div style="margin-top:5px;">&#128640; Code updated from GitHub</div>';
+                                msg += '<div style="margin-top:15px; padding:10px; background-color:#fff3cd; border:1px solid #ffc107; border-radius:5px;">';
+                                msg += '<strong style="color:#856404;">&#9888; IMPORTANT - Next Step:</strong><br>';
+                                msg += '<span style="color:#856404;">Go to PythonAnywhere Web tab and click the <strong>"Reload"</strong> button to apply changes!</span>';
+                                msg += '</div>';
+                                if(gitResp.git_output) {
+                                    msg += '<div style="margin-top:10px; font-size:12px; color:#666;">Git output: ' + gitResp.git_output.substring(0, 200) + '</div>';
+                                }
+                                document.getElementById("githubUpdateMsg").innerHTML = msg;
+                            } else {
+                                document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:red;">Error pulling from GitHub: ' + gitResp.msg + '</span>';
+                            }
+                        },
+                        function(error) {
+                            document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:red;">Error communicating with server during git pull.</span>';
+                            console.log(error);
+                        }
+                    );
+                } else {
+                    document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:red;">Error creating backup before update: ' + resp.msg + '</span>';
+                }
+            },
+            function(error) {
+                document.getElementById("githubUpdateMsg").innerHTML = '<span style="color:red;">Error downloading backup. Update cancelled.</span>';
+                console.log(error);
+            }
+        );
     }
 
 })

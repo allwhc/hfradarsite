@@ -1,7 +1,7 @@
 from flask import Flask,request,json,send_file,render_template
 from flask_cors import CORS, cross_origin
 from xlwt import Workbook
-import os,math,smtplib,os.path,sqlite3
+import os,math,smtplib,os.path,sqlite3,subprocess
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
@@ -1709,6 +1709,57 @@ def adminRestoreBackup():
     except Exception as e:
         print("Error restoring backup:", e)
         return json.dumps({'sel': 'adminRestoreBackup', 'stat': 'error', 'msg': 'Failed to restore backup: ' + str(e)})
+
+# Admin API: Pull latest code from GitHub
+@app.route("/admin/pullFromGithub", methods=['POST'])
+def adminPullFromGithub():
+    try:
+        # Get the current working directory (where app.py is located)
+        repo_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Execute git pull command
+        result = subprocess.run(
+            ['git', 'pull', 'origin', 'main'],
+            cwd=repo_dir,
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+
+        # Check if git pull was successful
+        if result.returncode == 0:
+            output = result.stdout + result.stderr
+            return json.dumps({
+                'sel': 'adminPullFromGithub',
+                'stat': 'success',
+                'msg': 'Code updated successfully from GitHub!',
+                'git_output': output
+            })
+        else:
+            return json.dumps({
+                'sel': 'adminPullFromGithub',
+                'stat': 'error',
+                'msg': 'Git pull failed: ' + result.stderr
+            })
+    except subprocess.TimeoutExpired:
+        return json.dumps({
+            'sel': 'adminPullFromGithub',
+            'stat': 'error',
+            'msg': 'Git pull timed out after 30 seconds'
+        })
+    except FileNotFoundError:
+        return json.dumps({
+            'sel': 'adminPullFromGithub',
+            'stat': 'error',
+            'msg': 'Git command not found. Please ensure git is installed.'
+        })
+    except Exception as e:
+        print("Error pulling from GitHub:", e)
+        return json.dumps({
+            'sel': 'adminPullFromGithub',
+            'stat': 'error',
+            'msg': 'Failed to pull from GitHub: ' + str(e)
+        })
 
 # ============ END DATABASE BACKUP & RESTORE APIs ============
 

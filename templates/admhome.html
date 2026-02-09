@@ -469,7 +469,7 @@
 						</div>
 
 						<!-- Upload Restore Section -->
-						<div class="row">
+						<div class="row" style="margin-bottom: 30px;">
 							<div class="col-md-12">
 								<div class="panel panel-warning">
 									<div class="panel-heading"><strong>Restore Database from Backup</strong></div>
@@ -483,6 +483,28 @@
 											<span style="font-size: 18px;">&#128194;</span> Restore from Backup
 										</button>
 										<div id="uploadMsg" style="margin-top: 10px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Update from GitHub Section -->
+						<div class="row">
+							<div class="col-md-12">
+								<div class="panel panel-info">
+									<div class="panel-heading"><strong>&#128640; Update Code from GitHub</strong></div>
+									<div class="panel-body">
+										<p>Pull the latest code from GitHub repository. This will:</p>
+										<ol>
+											<li><strong>Auto-download a database backup</strong> (to protect your data)</li>
+											<li><strong>Pull latest code</strong> from GitHub (app.py, templates, etc.)</li>
+											<li><strong>Prompt you to reload</strong> the web app from PythonAnywhere dashboard</li>
+										</ol>
+										<p style="color: #0066cc;"><strong>Note:</strong> After update completes, you MUST reload your web app from the PythonAnywhere Web tab for changes to take effect.</p>
+										<button class="btn btn-info btn-lg" ng-click="updateFromGithub()">
+											<span style="font-size: 18px;">&#128640;</span> Update from GitHub
+										</button>
+										<div id="githubUpdateMsg" style="margin-top: 10px;"></div>
 									</div>
 								</div>
 							</div>
