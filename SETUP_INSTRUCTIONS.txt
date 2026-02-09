@@ -1,0 +1,56 @@
+====================================================================
+PythonAnywhere Auto-Reload Setup Instructions
+====================================================================
+
+STEP 1: Set Environment Variables in PythonAnywhere Bash Console
+-----------------------------------------------------------------
+
+Open a Bash console on PythonAnywhere and run these commands:
+
+cd ~/deploy
+
+echo 'export PA_USERNAME="hfradarsite"' >> ~/.bashrc
+echo 'export PA_DOMAIN="hfradarsite.pythonanywhere.com"' >> ~/.bashrc
+echo 'export PA_API_TOKEN="052147026d092fba5b7c51ef5c673fe568283f4c"' >> ~/.bashrc
+
+source ~/.bashrc
+
+
+STEP 2: Verify Environment Variables
+-------------------------------------
+
+echo $PA_USERNAME
+echo $PA_DOMAIN
+echo $PA_API_TOKEN
+
+You should see:
+  hfradarsite
+  hfradarsite.pythonanywhere.com
+  052147026d092fba5b7c51ef5c673fe568283f4c
+
+
+STEP 3: Reload Your Web App
+----------------------------
+
+Go to PythonAnywhere Web tab → Click "Reload" button
+
+
+STEP 4: Test Auto-Reload Feature
+---------------------------------
+
+1. Go to your site's admin panel
+2. Navigate to "Database Backup" tab
+3. Click "Update from GitHub"
+4. Follow the on-screen instructions
+5. If configured correctly, web app will reload automatically!
+
+
+====================================================================
+SECURITY REMINDER
+====================================================================
+
+IMPORTANT: After setup is complete, you should regenerate your API
+token on PythonAnywhere (Account → API Token → Create new token)
+since the current token was shared in conversation logs.
+
+====================================================================
