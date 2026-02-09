@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".HomeInventory">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#F5F5F5">
+
+        <!-- QR Scan Card - Primary Option (Compact) -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="4dp"
+            android:elevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnScanQR"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:text="Scan QR"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:drawableStart="@android:drawable/ic_menu_camera"
+                    android:drawablePadding="8dp"
+                    android:background="@drawable/btn_qr_background" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- OR Divider (Compact) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="#CCCCCC" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  OR enter manually  "
+                android:textSize="11sp"
+                android:textColor="#888888" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="#CCCCCC" />
+
+        </LinearLayout>
+
+        <!-- Header Card - Month/Year and Site Selection (Compact) -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="4dp"
+            android:elevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <!-- Month and Year Selection Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Month:"
+                        android:textSize="13sp"
+                        android:textColor="#666666" />
+
+                    <Spinner
+                        android:id="@+id/spinnerMonth"
+                        android:layout_width="110dp"
+                        android:layout_height="36dp"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="@drawable/spinner_background" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Year:"
+                        android:textSize="13sp"
+                        android:textColor="#666666" />
+
+                    <Spinner
+                        android:id="@+id/spinnerYear"
+                        android:layout_width="90dp"
+                        android:layout_height="36dp"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/spinner_background" />
+                </LinearLayout>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="#E0E0E0" />
+
+                <!-- Site Selection Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Site:"
+                        android:textSize="13sp"
+                        android:textColor="#666666" />
+
+                    <Spinner
+                        android:id="@+id/spinnerSite"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/spinner_background" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Total Radial Count Card (Compact) -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="4dp"
+            android:elevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="8dp"
+                android:gravity="center_vertical"
+                android:background="#E3F2FD">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Radial:"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#1976D2" />
+
+                <TextView
+                    android:id="@+id/tvTotalRadial"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="0"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#1976D2" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/tvDataStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="12sp"
+                    android:textColor="#4CAF50"
+                    android:visibility="gone"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/btnReset"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:text="RESET"
+                    android:textSize="11sp"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/btn_reset_background"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:minWidth="0dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Days List Header (Compact) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:background="#E0E0E0">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Day"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#666666" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Radial (0-24)"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#666666" />
+        </LinearLayout>
+
+        <!-- Scrollable Days List -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:id="@+id/llDaysList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="4dp" />
+        </ScrollView>
+
+        <!-- Bottom Buttons (Compact) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="6dp"
+            android:background="#FFFFFF"
+            android:elevation="8dp">
+
+            <Button
+                android:id="@+id/btnSave"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:text="SAVE"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/btn_save_background" />
+
+            <Button
+                android:id="@+id/btnSend"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:text="SEND"
+                android:textColor="#FFFFFF"
+                android:alpha="0.5"
+                android:enabled="false"
+                android:background="@drawable/btn_send_background" />
+        </LinearLayout>
+
+    </LinearLayout>
+</FrameLayout>

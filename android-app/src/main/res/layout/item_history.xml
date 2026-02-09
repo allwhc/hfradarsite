@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <!-- Status Icon -->
+        <TextView
+            android:id="@+id/tvStatusIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:text="✓"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:textColor="#4CAF50" />
+
+        <!-- Details -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+
+            <!-- Site and Month -->
+            <TextView
+                android:id="@+id/tvSiteMonth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Puri - Dec 2025"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#333333" />
+
+            <!-- Date and Time -->
+            <TextView
+                android:id="@+id/tvDateTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Sent: 29 Jan 2026, 10:45 AM"
+                android:textSize="13sp"
+                android:textColor="#666666" />
+
+            <!-- Method -->
+            <TextView
+                android:id="@+id/tvMethod"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Method: Add Data"
+                android:textSize="13sp"
+                android:textColor="#666666" />
+
+        </LinearLayout>
+
+        <!-- Total -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="end">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total"
+                android:textSize="11sp"
+                android:textColor="#999999" />
+
+            <TextView
+                android:id="@+id/tvTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="720"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#1976D2" />
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

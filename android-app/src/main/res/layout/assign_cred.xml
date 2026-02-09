@@ -1,0 +1,208 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AssignCredentials">
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#5fb0c9"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txtHdr"
+            android:layout_width="fill_parent"
+            android:layout_height="40dp"
+            android:textColor="#FF4081"
+            android:text="            UPDATE CONFIGURATION     "
+            android:textSize="25dp"
+            android:textStyle="bold"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="5dip"/>
+
+        <ScrollView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/txtHdr"
+            android:layout_marginTop="20dp">
+
+            <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:layout_marginTop="50dp"
+                android:background="#fff"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="10dp">
+
+                    <LinearLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingTop="10dp">
+                        <TextView
+                            android:id="@+id/txtpwd"
+                            android:layout_width="100dp"
+                            android:layout_height="35dp"
+                            android:text="Password"
+                            android:textColor="#000080"
+                            android:textSize="20dp"
+                            android:layout_below="@+id/txtHdr"
+                            android:layout_alignParentLeft="true"
+                            android:layout_marginBottom="5dip"/>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="fill_parent"
+                            android:layout_alignParentRight="true"
+                            android:layout_height="wrap_content">
+
+                            <EditText
+                                android:id="@+id/txtPassword"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:drawableTint="#FF4081"
+                                android:singleLine="true"
+                                android:hint="Password"
+                                android:password="true"
+                                android:inputType="none" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+
+                    <!-- URL Section with Lock/Unlock -->
+                    <LinearLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingTop="20dp"
+                        android:gravity="center_vertical">
+                        <TextView
+                            android:id="@+id/txturl"
+                            android:layout_width="70dp"
+                            android:layout_height="35dp"
+                            android:text="URL"
+                            android:textColor="#000080"
+                            android:textSize="20dp"/>
+
+                        <Button
+                            android:id="@+id/btnUnlockUrl"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:text="🔒"
+                            android:textSize="16sp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="0dp"/>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content">
+
+                            <EditText
+                                android:id="@+id/edtUrl"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:drawableTint="#FF4081"
+                                android:singleLine="true"
+                                android:hint="Server URL"
+                                android:enabled="false"
+                                android:inputType="textUri" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Tap lock icon to edit URL (requires admin password)"
+                        android:textColor="#666666"
+                        android:textSize="11sp"
+                        android:paddingTop="2dp" />
+
+                    <!-- Update Site List Section -->
+                    <LinearLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="25dp">
+
+                        <Button
+                            android:id="@+id/btnUpdateSites"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:background="#2196F3"
+                            android:text="Update Site List from Server"
+                            android:textAllCaps="false"
+                            android:textColor="#fff"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/tvSiteListStatus"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Sites: Loading..."
+                            android:textColor="#666666"
+                            android:textSize="12sp"
+                            android:paddingTop="6dp"
+                            android:paddingBottom="5dp" />
+
+                    </LinearLayout>
+
+                    <!-- Monthly Reminder Toggle -->
+                    <LinearLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingTop="20dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Enable Monthly Reminders"
+                            android:textColor="#000080"
+                            android:textSize="16sp" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchReminders"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Get reminded on 1st of every month at 9 AM"
+                        android:textColor="#666666"
+                        android:textSize="12sp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="10dp" />
+
+                    <Button
+                        android:id="@+id/btnLogin"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="22dp"
+                        android:background="#d67601"
+                        android:text="Save Configuration"
+                        android:textAllCaps="false"
+                        android:textColor="#fff"
+                        android:textSize="18sp" />
+                </LinearLayout>
+            </RelativeLayout>
+
+        </ScrollView>
+
+    </RelativeLayout>
+</FrameLayout>
