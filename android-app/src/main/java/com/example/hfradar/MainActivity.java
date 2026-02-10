@@ -92,6 +92,9 @@ public class MainActivity extends AppCompatActivity {
                 else if (itemId == R.id.sixth) {
                     frag = new VerifyDataFragment();
                 }
+                else if (itemId == R.id.seventh) {
+                    frag = new AttendanceFragment();
+                }
                 else if (itemId == R.id.fourth) {
                     Intent i = new Intent(getApplicationContext(), login_form.class);
                     startActivity(i);
