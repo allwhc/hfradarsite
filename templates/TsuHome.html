@@ -722,15 +722,20 @@
 			  <div id="atttabs" ng-controller="AttTabsCtrl" class="panel panel-default menutab">
 			  <div class="well pnltab"><label>Attendance Records</label></div>
                     <div class="content">
-                        <!-- Toggle Button -->
+                        <!-- Toggle Button Group -->
                         <div class="row" style="margin-bottom: 15px;">
-                            <div class="col-md-12">
-                                <button class="btn btn-default" ng-click="toggleView()">
-                                    <span ng-hide="showAllRecords">Show All Entries</span>
-                                    <span ng-show="showAllRecords">Show Site Summary</span>
+                            <div class="col-md-12" style="display:flex; align-items:center; gap:12px;">
+                                <div class="btn-group">
+                                    <button class="btn" ng-class="{'btn-info active': !showAllRecords, 'btn-default': showAllRecords}" ng-click="showAllRecords && toggleView()" style="min-width:130px;">
+                                        <span class="glyphicon glyphicon-th-list"></span>&nbsp; Site Summary
+                                    </button>
+                                    <button class="btn" ng-class="{'btn-info active': showAllRecords, 'btn-default': !showAllRecords}" ng-click="!showAllRecords && toggleView()" style="min-width:130px;">
+                                        <span class="glyphicon glyphicon-list"></span>&nbsp; All Entries
+                                    </button>
+                                </div>
+                                <button class="btn btn-default btn-sm" ng-click="showAllRecords ? loadUserAttendance() : loadAttendanceSummary()" title="Refresh">
+                                    <span class="glyphicon glyphicon-refresh"></span>
                                 </button>
-                                &nbsp;&nbsp;
-                                <button class="btn btn-primary btn-sm" ng-click="showAllRecords ? loadUserAttendance() : loadAttendanceSummary()">Refresh</button>
                             </div>
                         </div>
 
@@ -745,7 +750,7 @@
                                             <th>Last Staff</th>
                                             <th>Last Attendance</th>
                                             <th>Coordinates</th>
-                                            <th>Distance</th>
+                                            <th>Distance from Site</th>
                                         </tr>
                                     </thead>
                                     <tbody>
