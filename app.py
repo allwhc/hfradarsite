@@ -10,7 +10,7 @@ from email import encoders
 from gsheetRAD import insert_data_to_gsheet, get_previous_month_and_year
 
 app = Flask(__name__)
-cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 
 # Database path
