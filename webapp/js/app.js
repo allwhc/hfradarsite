@@ -24,8 +24,11 @@ var currentReasonDay = -1;
 var dataSaved = false;
 var dataSent = false;
 var qrSourceType = "Manual";
-var html5QrCode = null;
 var passwordModalCallback = null;
+
+// QR camera state
+var qrVideoStream = null;
+var qrScanTimer = null;
 
 // ===== INIT =====
 document.addEventListener("DOMContentLoaded", function() {
@@ -44,7 +47,8 @@ function initNavigation() {
     var sideMenu = document.getElementById("sideMenu");
     var overlay = document.getElementById("overlay");
 
-    menuBtn.addEventListener("click", function() {
+    menuBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
         sideMenu.classList.add("open");
         overlay.classList.add("show");
     });
@@ -55,20 +59,21 @@ function initNavigation() {
     });
 
     var menuItems = document.querySelectorAll(".side-menu-list li");
-    menuItems.forEach(function(item) {
-        item.addEventListener("click", function() {
+    for (var i = 0; i < menuItems.length; i++) {
+        menuItems[i].addEventListener("click", function() {
             var pageName = this.getAttribute("data-page");
             showPage(pageName);
-            menuItems.forEach(function(m) { m.classList.remove("active"); });
+            for (var j = 0; j < menuItems.length; j++) menuItems[j].classList.remove("active");
             this.classList.add("active");
             sideMenu.classList.remove("open");
             overlay.classList.remove("show");
         });
-    });
+    }
 }
 
 function showPage(pageName) {
-    document.querySelectorAll(".page").forEach(function(p) { p.classList.remove("active"); });
+    var pages = document.querySelectorAll(".page");
+    for (var i = 0; i < pages.length; i++) pages[i].classList.remove("active");
     var el = document.getElementById("page-" + pageName);
     if (el) el.classList.add("active");
 }
@@ -127,8 +132,7 @@ function saveSettings() {
     var url = document.getElementById("settingsUrl").value.trim();
     if (!pwd) { showToast("Password cannot be empty"); return; }
     if (!url) { showToast("Server URL cannot be empty"); return; }
-    // Remove trailing slash
-    if (url.endsWith("/")) url = url.slice(0, -1);
+    if (url.charAt(url.length - 1) === "/") url = url.substring(0, url.length - 1);
     localStorage.setItem("hfr_app_pwd", pwd);
     localStorage.setItem("hfr_server_url", url);
     document.getElementById("settingsMsg").innerHTML = '<span style="color:green;">Settings saved!</span>';
@@ -184,16 +188,19 @@ function updateSitesStatus() {
 // ===== DROPDOWNS =====
 function initDropdowns() {
     var now = new Date();
-    var prevMonth = now.getMonth(); // 0-indexed, so this is "previous" month (current-1 becomes last month)
-    var prevYear = now.getFullYear();
     // Default to previous month
-    if (prevMonth === 0) { prevMonth = 12; prevYear--; }
-    // else prevMonth stays as current month index (which is previous month in 1-indexed)
+    var defMonth = now.getMonth(); // 0-indexed: Jan=0
+    var defYear = now.getFullYear();
+    if (defMonth === 0) {
+        defMonth = 12;
+        defYear--;
+    }
+    // defMonth is now 1-indexed previous month
 
-    // Month dropdowns
+    // Month dropdowns (value 1-12)
     var monthHtml = "";
     for (var i = 1; i <= 12; i++) {
-        monthHtml += '<option value="' + i + '"' + (i === prevMonth ? ' selected' : '') + '>' + MONTH_NAMES[i-1] + '</option>';
+        monthHtml += '<option value="' + i + '"' + (i === defMonth ? ' selected' : '') + '>' + MONTH_NAMES[i - 1] + '</option>';
     }
     document.getElementById("selMonth").innerHTML = monthHtml;
     document.getElementById("verifyMonth").innerHTML = monthHtml;
@@ -202,24 +209,22 @@ function initDropdowns() {
     var curYear = now.getFullYear();
     var yearHtml = "";
     for (var y = curYear; y >= curYear - 4; y--) {
-        yearHtml += '<option value="' + y + '"' + (y === prevYear ? ' selected' : '') + '>' + y + '</option>';
+        yearHtml += '<option value="' + y + '"' + (y === defYear ? ' selected' : '') + '>' + y + '</option>';
     }
     document.getElementById("selYear").innerHTML = yearHtml;
     document.getElementById("verifyYear").innerHTML = yearHtml;
 
     // Site dropdown
     var sites = getSitesList();
-    var siteHtml = '<option value="">-- Select Site --</option>';
-    sites.forEach(function(s) {
-        siteHtml += '<option value="' + s + '">' + s + '</option>';
-    });
+    var siteHtml = '<option value="">Select Site</option>';
+    for (var s = 0; s < sites.length; s++) {
+        siteHtml += '<option value="' + sites[s] + '">' + sites[s] + '</option>';
+    }
     document.getElementById("selSite").innerHTML = siteHtml;
 
     // Restore last site
     var lastSite = localStorage.getItem("hfr_last_site");
-    if (lastSite) {
-        document.getElementById("selSite").value = lastSite;
-    }
+    if (lastSite) document.getElementById("selSite").value = lastSite;
 
     buildDayGrid();
 }
@@ -237,12 +242,15 @@ function getDayName(year, month, day) {
 function buildDayGrid() {
     var month = parseInt(document.getElementById("selMonth").value);
     var year = parseInt(document.getElementById("selYear").value);
+    if (!month || !year) return;
+
     var days = getDaysInMonth(month, year);
 
-    // Init arrays if needed
+    // Init arrays if size doesn't match
     if (radialValues.length !== days) {
-        radialValues = new Array(days).fill(0);
-        reasons = new Array(days).fill("");
+        radialValues = [];
+        reasons = [];
+        for (var k = 0; k < days; k++) { radialValues.push(0); reasons.push(""); }
     }
 
     var html = "";
@@ -253,18 +261,19 @@ function buildDayGrid() {
         var val = radialValues[i] || 0;
         var hasReason = reasons[i] && reasons[i] !== "";
         var noteClass = val >= 24 ? "btn-note hidden" : (hasReason ? "btn-note has-reason" : "btn-note");
+        var altClass = (i % 2 === 0) ? " alt" : "";
 
-        html += '<div class="day-row">';
-        html += '  <div class="day-label">';
-        html += '    <div class="day-date">' + dateStr + '</div>';
-        html += '    <div class="day-name">Day ' + dayNum + ' (' + dayName + ')</div>';
-        html += '  </div>';
-        html += '  <div class="day-controls">';
-        html += '    <button class="btn-adj" onclick="adjRadial(' + i + ',-1)">-</button>';
-        html += '    <span class="radial-val" id="rv' + i + '">' + val + '</span>';
-        html += '    <button class="btn-adj" onclick="adjRadial(' + i + ',1)">+</button>';
-        html += '    <button class="' + noteClass + '" id="nb' + i + '" onclick="openReasonModal(' + i + ')" title="Add reason">&#9998;</button>';
-        html += '  </div>';
+        html += '<div class="day-row' + altClass + '">';
+        html += '<div class="day-info">';
+        html += '<div class="day-date">' + dateStr + '</div>';
+        html += '<div class="day-name">Day ' + dayNum + ' (' + dayName + ')</div>';
+        html += '</div>';
+        html += '<div class="day-controls">';
+        html += '<button class="btn-adj" onclick="adjRadial(' + i + ',-1)">−</button>';
+        html += '<span class="radial-val" id="rv' + i + '">' + val + '</span>';
+        html += '<button class="btn-adj" onclick="adjRadial(' + i + ',1)">+</button>';
+        html += '<button class="' + noteClass + '" id="nb' + i + '" onclick="openReasonModal(' + i + ')">&#9998;</button>';
+        html += '</div>';
         html += '</div>';
     }
     document.getElementById("dayGrid").innerHTML = html;
@@ -282,7 +291,7 @@ function adjRadial(idx, delta) {
     dataSent = false;
     updateTotal();
     updateDataStatus();
-    // Update note button visibility
+
     var nb = document.getElementById("nb" + idx);
     if (val >= 24) {
         nb.className = "btn-note hidden";
@@ -295,9 +304,7 @@ function adjRadial(idx, delta) {
 
 function updateTotal() {
     var total = 0;
-    for (var i = 0; i < radialValues.length; i++) {
-        total += (radialValues[i] || 0);
-    }
+    for (var i = 0; i < radialValues.length; i++) total += (radialValues[i] || 0);
     document.getElementById("totalRadial").textContent = total;
 }
 
@@ -306,12 +313,12 @@ function updateDataStatus() {
     var sendBtn = document.getElementById("btnSend");
     if (dataSent) {
         badge.style.display = "inline-block";
-        badge.className = "badge badge-sent";
+        badge.className = "status-badge status-sent";
         badge.textContent = "Sent";
         sendBtn.disabled = true;
     } else if (dataSaved) {
         badge.style.display = "inline-block";
-        badge.className = "badge badge-saved";
+        badge.className = "status-badge status-saved";
         badge.textContent = "Saved";
         sendBtn.disabled = false;
     } else {
@@ -326,7 +333,7 @@ function onMonthYearSiteChange() {
     dataSaved = false;
     dataSent = false;
     qrSourceType = "Manual";
-    // Try to load saved data for this month/year/site
+    // Try loading saved data, else reset
     if (!loadSavedData()) {
         radialValues = [];
         reasons = [];
@@ -346,13 +353,13 @@ function openReasonModal(dayIdx) {
     var isCustom = currentReason !== "" && REASONS_LIST.indexOf(currentReason) === -1 && currentReason !== "Other";
 
     var html = "";
-    REASONS_LIST.forEach(function(r) {
-        var sel = (r === currentReason || (r === "Other" && isCustom)) ? " selected" : "";
-        html += '<button class="reason-option' + sel + '" data-reason="' + r + '" onclick="selectReasonOption(this)">' + r + '</button>';
-    });
+    for (var r = 0; r < REASONS_LIST.length; r++) {
+        var reason = REASONS_LIST[r];
+        var sel = (reason === currentReason || (reason === "Other" && isCustom)) ? " selected" : "";
+        html += '<button class="reason-option' + sel + '" data-reason="' + reason + '" onclick="selectReasonOption(this)">' + reason + '</button>';
+    }
     document.getElementById("reasonOptions").innerHTML = html;
 
-    // Custom text
     if (isCustom) {
         document.getElementById("reasonCustomDiv").style.display = "block";
         document.getElementById("reasonCustomText").value = currentReason;
@@ -365,7 +372,8 @@ function openReasonModal(dayIdx) {
 }
 
 function selectReasonOption(btn) {
-    document.querySelectorAll(".reason-option").forEach(function(b) { b.classList.remove("selected"); });
+    var options = document.querySelectorAll(".reason-option");
+    for (var i = 0; i < options.length; i++) options[i].classList.remove("selected");
     btn.classList.add("selected");
     if (btn.getAttribute("data-reason") === "Other") {
         document.getElementById("reasonCustomDiv").style.display = "block";
@@ -383,12 +391,11 @@ function saveReason() {
         var val = selected.getAttribute("data-reason");
         if (val === "Other") {
             var custom = document.getElementById("reasonCustomText").value.trim();
-            reasons[currentReasonDay] = custom || "Other";
+            reasons[currentReasonDay] = custom ? ("Other: " + custom) : "Other";
         } else {
             reasons[currentReasonDay] = val;
         }
     }
-    // Update note button
     var nb = document.getElementById("nb" + currentReasonDay);
     if (reasons[currentReasonDay]) {
         nb.className = "btn-note has-reason";
@@ -469,9 +476,7 @@ function sendData() {
     var total = 0;
     for (var i = 0; i < radialValues.length; i++) total += (radialValues[i] || 0);
 
-    var confirmMsg = "Site: " + site + "\nReport Month: " + MONTH_NAMES[month-1] + " " + year + "\n\nTotal Radial Count: " + total + "\n\nAre you sure you want to send this data?";
-
-    // Check if current month
+    // Determine if this is the default (previous) month
     var now = new Date();
     var prevMonth = now.getMonth(); // 0-indexed
     var prevYear = now.getFullYear();
@@ -480,7 +485,7 @@ function sendData() {
     var isCurrentPeriod = (month === prevMonth && year === prevYear);
 
     if (!isCurrentPeriod) {
-        showPasswordModal("Authorization Required", "Enter admin password to send data for " + MONTH_NAMES[month-1] + " " + year, function(pwd) {
+        showPasswordModal("Authorization Required", "Enter admin password to send data for " + MONTH_NAMES[month - 1] + " " + year, function(pwd) {
             if (pwd === ADMIN_PWD) {
                 doSend(site, month, year, total);
             } else if (pwd !== null) {
@@ -488,6 +493,7 @@ function sendData() {
             }
         });
     } else {
+        var confirmMsg = "Site: " + site + "\nMonth: " + MONTH_NAMES[month - 1] + " " + year + "\nTotal: " + total + "\n\nSend this data?";
         if (confirm(confirmMsg)) {
             doSend(site, month, year, total);
         }
@@ -499,7 +505,9 @@ function doSend(site, month, year, total) {
     var cred1 = [];
     for (var i = 0; i < days; i++) {
         var dayNum = i + 1;
-        var dateStr = year + "-" + String(month).padStart(2, "0") + "-" + String(dayNum).padStart(2, "0");
+        var mm = month < 10 ? "0" + month : "" + month;
+        var dd = dayNum < 10 ? "0" + dayNum : "" + dayNum;
+        var dateStr = year + "-" + mm + "-" + dd;
         var entry = {
             id: site,
             dt: dateStr,
@@ -522,7 +530,6 @@ function doSend(site, month, year, total) {
 
     apiPost(getServerUrl() + "/upldTsuData", payload, function(resp) {
         dataSent = true;
-        // Update saved data
         var key = getStorageKey();
         var stored = localStorage.getItem(key);
         if (stored) {
@@ -532,8 +539,6 @@ function doSend(site, month, year, total) {
         }
         updateDataStatus();
         showToast("Data sent successfully!");
-
-        // Add to history
         addHistory(site, month, year, total, qrSourceType, true);
     }, function(err) {
         document.getElementById("btnSend").disabled = false;
@@ -543,10 +548,11 @@ function doSend(site, month, year, total) {
 }
 
 function resetData() {
-    if (!confirm("Are you sure you want to reset all radial values to 0?")) return;
+    if (!confirm("Reset all radial values to 0?")) return;
     var days = radialValues.length;
-    radialValues = new Array(days).fill(0);
-    reasons = new Array(days).fill("");
+    radialValues = [];
+    reasons = [];
+    for (var i = 0; i < days; i++) { radialValues.push(0); reasons.push(""); }
     dataSaved = false;
     dataSent = false;
     qrSourceType = "Manual";
@@ -554,37 +560,95 @@ function resetData() {
     showToast("All values reset");
 }
 
-// ===== QR CODE =====
+// ===== QR CODE (Native getUserMedia + jsQR) =====
 function startQRScan() {
-    document.getElementById("qrModal").style.display = "flex";
-    document.getElementById("qrStatus").textContent = "Point camera at QR code...";
+    var modal = document.getElementById("qrModal");
+    var video = document.getElementById("qrVideo");
+    var statusEl = document.getElementById("qrStatus");
 
-    html5QrCode = new Html5Qrcode("qrReader");
-    html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        function(decodedText) {
-            processQRData(decodedText);
-            stopQRScan();
-        },
-        function(errorMessage) { /* ignore scan errors */ }
-    ).catch(function(err) {
-        document.getElementById("qrStatus").textContent = "Camera error: " + err;
-    });
+    modal.style.display = "flex";
+    statusEl.textContent = "Starting camera...";
+
+    // Check for camera support
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        statusEl.textContent = "Camera not supported on this browser.";
+        return;
+    }
+
+    var constraints = {
+        video: {
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(stream) {
+            qrVideoStream = stream;
+            video.srcObject = stream;
+            video.setAttribute("playsinline", "true");
+            video.play();
+            statusEl.textContent = "Point camera at QR code...";
+            // Start scanning after video is playing
+            video.addEventListener("loadedmetadata", function() {
+                startQRScanning();
+            });
+        })
+        .catch(function(err) {
+            statusEl.textContent = "Camera error: " + err.message;
+        });
+}
+
+function startQRScanning() {
+    var video = document.getElementById("qrVideo");
+    var canvas = document.getElementById("qrCanvas");
+    var ctx = canvas.getContext("2d");
+    var statusEl = document.getElementById("qrStatus");
+
+    function scanFrame() {
+        if (!qrVideoStream) return;
+
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert"
+            });
+
+            if (code && code.data) {
+                statusEl.textContent = "QR Code found!";
+                stopQRScan();
+                processQRData(code.data);
+                return;
+            }
+        }
+        qrScanTimer = requestAnimationFrame(scanFrame);
+    }
+
+    qrScanTimer = requestAnimationFrame(scanFrame);
 }
 
 function stopQRScan() {
-    if (html5QrCode) {
-        html5QrCode.stop().then(function() {
-            html5QrCode.clear();
-        }).catch(function() {});
-        html5QrCode = null;
+    if (qrScanTimer) {
+        cancelAnimationFrame(qrScanTimer);
+        qrScanTimer = null;
     }
+    if (qrVideoStream) {
+        var tracks = qrVideoStream.getTracks();
+        for (var i = 0; i < tracks.length; i++) tracks[i].stop();
+        qrVideoStream = null;
+    }
+    var video = document.getElementById("qrVideo");
+    video.srcObject = null;
     document.getElementById("qrModal").style.display = "none";
 }
 
 function processQRData(qrString) {
-    // Format: Site:Month:Year:Day1:Day2:...DayN:Total:Hex1:Hex2:...
+    // Format: Site:Month:Year:Day1:Day2:...DayN:Total[:Hex1:Hex2:...]
     var parts = qrString.split(":");
     if (parts.length < 4) {
         showToast("Invalid QR format");
@@ -605,48 +669,69 @@ function processQRData(qrString) {
     var qrTotal = 0;
 
     for (var i = 0; i < days; i++) {
-        var val = parseInt(parts[3 + i]) || 0;
+        var partIdx = 3 + i;
+        var val = 0;
+        if (partIdx < parts.length) {
+            var p = parts[partIdx];
+            // Skip hex values
+            if (p.indexOf("0x") === 0 || p.indexOf("0X") === 0) {
+                val = 0;
+            } else {
+                val = parseInt(p) || 0;
+            }
+        }
         if (val < 0) val = 0;
         if (val > 24) val = 24;
         qrRadials.push(val);
         qrTotal += val;
     }
 
-    // Set dropdowns
-    document.getElementById("selMonth").value = qrMonth;
-    document.getElementById("selYear").value = qrYear;
+    // Validate total if present
+    var totalIdx = 3 + days;
+    if (totalIdx < parts.length) {
+        var expectedTotal = parseInt(parts[totalIdx]);
+        if (!isNaN(expectedTotal) && expectedTotal !== qrTotal) {
+            showToast("QR validation failed! Expected total: " + expectedTotal + ", got: " + qrTotal);
+            return;
+        }
+    }
 
-    // Set site
-    var siteSelect = document.getElementById("selSite");
-    var siteFound = false;
-    for (var j = 0; j < siteSelect.options.length; j++) {
-        if (siteSelect.options[j].value === qrSite) {
-            siteSelect.value = qrSite;
-            siteFound = true;
+    // Match site name (case-insensitive)
+    var sites = getSitesList();
+    var matchedSite = qrSite;
+    for (var s = 0; s < sites.length; s++) {
+        if (sites[s].toLowerCase() === qrSite.toLowerCase()) {
+            matchedSite = sites[s];
             break;
         }
     }
 
+    // Set dropdowns
+    document.getElementById("selMonth").value = qrMonth;
+    document.getElementById("selYear").value = qrYear;
+    document.getElementById("selSite").value = matchedSite;
+
     radialValues = qrRadials;
-    reasons = new Array(days).fill("");
+    reasons = [];
+    for (var j = 0; j < days; j++) reasons.push("");
+
     dataSaved = false;
     dataSent = false;
     qrSourceType = "QR";
 
     buildDayGrid();
-    showToast("QR data loaded (Total: " + qrTotal + "). You can edit before saving.");
+    showToast("QR data loaded (Total: " + qrTotal + "). Edit before saving.");
 }
 
 // ===== ATTENDANCE =====
 function loadAttendanceSites() {
     var sites = getSitesList();
     var html = '<option value="">-- Select Site --</option>';
-    sites.forEach(function(s) {
-        html += '<option value="' + s + '">' + s + '</option>';
-    });
+    for (var i = 0; i < sites.length; i++) {
+        html += '<option value="' + sites[i] + '">' + sites[i] + '</option>';
+    }
     document.getElementById("attSite").innerHTML = html;
 
-    // Restore saved values
     var savedName = localStorage.getItem("hfr_att_name");
     var savedSite = localStorage.getItem("hfr_att_site");
     if (savedName) document.getElementById("attName").value = savedName;
@@ -660,16 +745,13 @@ function markAttendance() {
     if (!name) { showToast("Please enter your name"); return; }
     if (!site) { showToast("Please select a site"); return; }
 
-    // Save for next time
     localStorage.setItem("hfr_att_name", name);
     localStorage.setItem("hfr_att_site", site);
 
-    // Show loading
     document.getElementById("btnMarkAttendance").disabled = true;
     document.getElementById("attLoading").style.display = "block";
     document.getElementById("attResult").style.display = "none";
 
-    // Get GPS
     if (!navigator.geolocation) {
         submitAttendance(name, site, 0, 0);
         return;
@@ -680,7 +762,6 @@ function markAttendance() {
             submitAttendance(name, site, pos.coords.latitude, pos.coords.longitude);
         },
         function(err) {
-            // Try without GPS
             submitAttendance(name, site, 0, 0);
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 120000 }
@@ -698,13 +779,12 @@ function submitAttendance(name, site, lat, lng) {
     apiPost(getServerUrl() + "/markAttendance", payload, function(resp) {
         document.getElementById("btnMarkAttendance").disabled = false;
         document.getElementById("attLoading").style.display = "none";
-
         var resultEl = document.getElementById("attResult");
         resultEl.style.display = "block";
 
         if (resp.stat === "success") {
             resultEl.className = "result-box result-success";
-            resultEl.innerHTML = '<h5>Attendance Marked Successfully!</h5><p>Time: ' + (resp.timestamp || "") + '</p>';
+            resultEl.innerHTML = '<h5>Attendance Marked!</h5><p>Time: ' + (resp.timestamp || "") + '</p>';
         } else {
             resultEl.className = "result-box result-error";
             resultEl.innerHTML = '<h5>Could Not Mark Attendance</h5><p>' + (resp.msg || "Unknown error") + '</p>';
@@ -724,7 +804,6 @@ function fetchVerifyData() {
     var month = document.getElementById("verifyMonth").value;
     var year = document.getElementById("verifyYear").value;
 
-    // Check if password needed (non-default month)
     var now = new Date();
     var prevMonth = now.getMonth();
     var prevYear = now.getFullYear();
@@ -733,7 +812,7 @@ function fetchVerifyData() {
     var isDefault = (parseInt(month) === prevMonth && parseInt(year) === prevYear);
 
     if (!isDefault) {
-        showPasswordModal("Authorization Required", "Enter admin password to view data for " + MONTH_NAMES[parseInt(month)-1] + " " + year, function(pwd) {
+        showPasswordModal("Authorization Required", "Enter admin password to view data for " + MONTH_NAMES[parseInt(month) - 1] + " " + year, function(pwd) {
             if (pwd === ADMIN_PWD) {
                 doFetchVerify(month, year);
             } else if (pwd !== null) {
@@ -771,10 +850,9 @@ function doFetchVerify(month, year) {
 function buildVerifyTable(resp) {
     var sites = resp.idlist || [];
     var rows = resp.rcnt || [];
-    var numRows = parseInt(resp.hrows) || rows.length;
 
     var html = '<thead><tr><th>Day</th>';
-    sites.forEach(function(s) { html += '<th>' + s + '</th>'; });
+    for (var s = 0; s < sites.length; s++) html += '<th>' + sites[s] + '</th>';
     html += '</tr></thead><tbody>';
 
     for (var r = 0; r < rows.length; r++) {
@@ -825,7 +903,6 @@ function addHistory(site, month, year, total, method, success) {
         success: success,
         timestamp: new Date().toLocaleString()
     });
-    // Keep max 50
     if (history.length > 50) history = history.slice(0, 50);
     localStorage.setItem("hfr_history", JSON.stringify(history));
     loadHistory();
@@ -841,20 +918,21 @@ function loadHistory() {
     }
 
     var html = "";
-    history.forEach(function(h) {
+    for (var i = 0; i < history.length; i++) {
+        var h = history[i];
         var iconClass = h.success ? "success" : "failed";
         var iconSymbol = h.success ? "&#10003;" : "&#10007;";
         var monthName = MONTH_NAMES[(h.month || 1) - 1] || "";
 
         html += '<div class="history-card">';
-        html += '  <div class="history-icon ' + iconClass + '">' + iconSymbol + '</div>';
-        html += '  <div class="history-info">';
-        html += '    <div class="hi-title">' + h.site + ' - ' + monthName + ' ' + h.year + '</div>';
-        html += '    <div class="hi-sub">' + h.timestamp + ' | ' + h.method + '</div>';
-        html += '  </div>';
-        html += '  <div class="history-total">' + h.total + '</div>';
+        html += '<div class="history-icon ' + iconClass + '">' + iconSymbol + '</div>';
+        html += '<div class="history-info">';
+        html += '<div class="hi-title">' + h.site + ' - ' + monthName + ' ' + h.year + '</div>';
+        html += '<div class="hi-sub">' + h.timestamp + ' | ' + h.method + '</div>';
         html += '</div>';
-    });
+        html += '<div class="history-total">' + h.total + '</div>';
+        html += '</div>';
+    }
 
     el.innerHTML = html;
 }
