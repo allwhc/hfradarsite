@@ -1,4 +1,4 @@
-from flask import Flask,request,json,send_file,render_template
+from flask import Flask,request,json,send_file,render_template,send_from_directory
 from flask_cors import CORS, cross_origin
 from xlwt import Workbook
 import os,math,smtplib,os.path,sqlite3,subprocess,requests
@@ -273,6 +273,13 @@ def get_site_groups():
     except Exception as e:
         print("Error getting site groups:", e)
         return []
+
+@app.route("/app")
+@app.route("/app/")
+@app.route("/app/<path:filename>")
+def webapp(filename="index.html"):
+    webapp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'webapp')
+    return send_from_directory(webapp_dir, filename)
 
 @app.route("/")
 def main():
