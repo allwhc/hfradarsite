@@ -213,6 +213,9 @@
         			<a id="adat" ng-click="setTab(6)" class="list-group-item menutab">
         				About Us
         			</a>
+        			<a id="attdat" ng-click="setTab(7)" class="list-group-item menutab">
+        				Attendance
+        			</a>
         			<a id="lgout" class="list-group-item menutab" href="/logout">Logout</a>
                   </ul>
               </div>
@@ -715,11 +718,66 @@
 			    </div>
 			  </div>
 
+			  <div ng-show="isSet(7)">
+			  <div id="atttabs" ng-controller="AttTabsCtrl" class="panel panel-default menutab">
+			  <div class="well pnltab"><label>Attendance Records</label></div>
+                    <div class="content">
+                        <!-- Site Filter -->
+                        <div class="row" style="margin-bottom: 15px;">
+                            <div class="col-md-6">
+                                <form class="form-inline">
+                                    <div class="form-group">
+                                        <label>Filter by Site:&nbsp;</label>
+                                        <select class="form-control" ng-model="attSiteFilter" ng-change="loadUserAttendance()">
+                                            <option value="">-- All Sites --</option>
+                                            <option ng-repeat="s in attSiteList" value="{{s}}">{{s}}</option>
+                                        </select>
+                                    </div>
+                                    &nbsp;&nbsp;
+                                    <button class="btn btn-primary btn-sm" ng-click="loadUserAttendance()">Refresh</button>
+                                </form>
+                            </div>
+                        </div>
 
-
-
-
-
+                        <!-- Attendance Table -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div style="max-height: 450px; overflow-y: auto;">
+                                    <table class="table table-bordered table-striped" align="center">
+                                        <thead>
+                                            <tr style="background-color:#5bc0de; color:white;">
+                                                <th width="50">#</th>
+                                                <th>Staff Name</th>
+                                                <th>Site</th>
+                                                <th>Date & Time</th>
+                                                <th>Distance from Site</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat="rec in attRecords">
+                                                <td>{{$index + 1}}</td>
+                                                <td><strong>{{rec.staff_name}}</strong></td>
+                                                <td>{{rec.site_code}}</td>
+                                                <td>{{rec.timestamp}}</td>
+                                                <td>
+                                                    <span ng-class="{'text-success': rec.distance_str.indexOf('m') > -1 && rec.distance_str.indexOf('km') == -1, 'text-warning': rec.distance_str.indexOf('km') > -1}">
+                                                        <strong>{{rec.distance_str}}</strong>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr ng-if="attRecords.length == 0">
+                                                <td colspan="5" style="text-align:center; color:#999; padding:30px;">No attendance records found.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p style="color:#666; font-size:12px;">Showing last 50 records per site.</p>
+                            </div>
+                        </div>
+                    </div>
+                <br>
+              </div>
+			  </div>
 
 		</div>
 	</div>

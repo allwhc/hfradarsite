@@ -5,7 +5,7 @@ import os,math,smtplib,os.path,sqlite3,subprocess,requests
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
-from datetime import datetime
+from datetime import datetime, date
 from email import encoders
 from gsheetRAD import insert_data_to_gsheet, get_previous_month_and_year
 
@@ -98,6 +98,84 @@ def init_sites_table():
 
 # Initialize on startup
 init_sites_table()
+
+# Add site_lat and site_lng columns to sites table (migration)
+def migrate_sites_add_coords():
+    dbcon = None
+    try:
+        dbcon = sqlite3.connect(DB_PATH)
+        cursor = dbcon.cursor()
+        # Check if columns exist
+        cursor.execute("PRAGMA table_info(sites)")
+        cols = [row[1] for row in cursor.fetchall()]
+        if 'site_lat' not in cols:
+            cursor.execute("ALTER TABLE sites ADD COLUMN site_lat REAL DEFAULT NULL")
+        if 'site_lng' not in cols:
+            cursor.execute("ALTER TABLE sites ADD COLUMN site_lng REAL DEFAULT NULL")
+        dbcon.commit()
+
+        # Pre-populate known site coordinates
+        known_coords = {
+            'Yanm': (16.4776833, 82.1021000),
+            'Mach': (16.2425667, 81.2376167),
+            'Wasi': (20.9343833, 72.7605333),
+            'Jgri': (21.0394500, 71.8054833),
+            'Puri': (19.8065500, 85.8641500),
+            'Gopa': (19.3033167, 84.9658500),
+            'Kalp': (12.4922167, 80.1590000),
+            'Cuda': (11.6862333, 79.7733167),
+            'Htby': (10.5923000, 92.5627667),
+            'Ptbl': (11.5701333, 92.7376500),
+        }
+        for code, (lat, lng) in known_coords.items():
+            cursor.execute("UPDATE sites SET site_lat=?, site_lng=? WHERE site_code=? AND site_lat IS NULL", (lat, lng, code))
+        dbcon.commit()
+        cursor.close()
+    except Exception as e:
+        print("Error migrating sites coords:", e)
+    finally:
+        if dbcon:
+            dbcon.close()
+
+migrate_sites_add_coords()
+
+# Initialize attendance table
+def init_attendance_table():
+    dbcon = None
+    try:
+        dbcon = sqlite3.connect(DB_PATH)
+        cursor = dbcon.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS attendance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            staff_name VARCHAR(100) NOT NULL,
+            site_code VARCHAR(10) NOT NULL,
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL,
+            timestamp DATETIME NOT NULL,
+            distance_m REAL DEFAULT 0
+        )''')
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_attendance_site ON attendance(site_code)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_attendance_time ON attendance(timestamp)")
+        dbcon.commit()
+        cursor.close()
+    except Exception as e:
+        print("Error initializing attendance table:", e)
+    finally:
+        if dbcon:
+            dbcon.close()
+
+init_attendance_table()
+
+# Haversine formula to calculate distance between two GPS coordinates (in meters)
+def haversine_distance(lat1, lon1, lat2, lon2):
+    R = 6371000  # Earth radius in meters
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlam = math.radians(lon2 - lon1)
+    a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlam/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return R * c
 
 # Create indexes on maintsu table for faster queries
 def init_maintsu_indexes():
@@ -1834,6 +1912,228 @@ def adminReloadWebApp():
         })
 
 # ============ END DATABASE BACKUP & RESTORE APIs ============
+
+# ============ ATTENDANCE APIs ============
+
+# Mark attendance (from mobile app)
+@app.route("/markAttendance", methods=['POST'])
+@cross_origin()
+def markAttendance():
+    try:
+        data = request.get_json(silent=True)
+        staff_name = data.get('staff_name', '').strip()
+        site_code = data.get('site_code', '').strip()
+        lat = data.get('latitude', 0)
+        lng = data.get('longitude', 0)
+
+        if not staff_name or not site_code:
+            return json.dumps({'sel': 'markAttendance', 'stat': 'error', 'msg': 'Name and site are required'})
+
+        if lat == 0 and lng == 0:
+            return json.dumps({'sel': 'markAttendance', 'stat': 'error', 'msg': 'GPS coordinates are required'})
+
+        # Check 10 per day limit (same person + same site + same date)
+        today_str = date.today().strftime('%Y-%m-%d')
+        dbcon = sqlite3.connect(DB_PATH)
+        cursor = dbcon.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM attendance WHERE staff_name=? AND site_code=? AND DATE(timestamp)=?",
+            (staff_name, site_code, today_str)
+        )
+        day_count = cursor.fetchone()[0]
+
+        if day_count >= 10:
+            dbcon.close()
+            return json.dumps({'sel': 'markAttendance', 'stat': 'error', 'msg': 'Attendance already marked 10 times today for this site.'})
+
+        # Get site coordinates for distance calculation
+        cursor.execute("SELECT site_lat, site_lng FROM sites WHERE site_code=?", (site_code,))
+        site_row = cursor.fetchone()
+        distance_m = 0.0
+        if site_row and site_row[0] is not None and site_row[1] is not None:
+            distance_m = round(haversine_distance(lat, lng, site_row[0], site_row[1]), 1)
+
+        # Insert attendance record
+        now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        cursor.execute(
+            "INSERT INTO attendance (staff_name, site_code, latitude, longitude, timestamp, distance_m) VALUES (?, ?, ?, ?, ?, ?)",
+            (staff_name, site_code, lat, lng, now_str, distance_m)
+        )
+        dbcon.commit()
+
+        # Enforce 50 records per site cap - delete oldest if exceeded
+        cursor.execute("SELECT COUNT(*) FROM attendance WHERE site_code=?", (site_code,))
+        total = cursor.fetchone()[0]
+        if total > 50:
+            excess = total - 50
+            cursor.execute(
+                "DELETE FROM attendance WHERE id IN (SELECT id FROM attendance WHERE site_code=? ORDER BY timestamp ASC LIMIT ?)",
+                (site_code, excess)
+            )
+            dbcon.commit()
+
+        dbcon.close()
+
+        # Format distance for display
+        if distance_m >= 1000:
+            dist_str = str(round(distance_m / 1000, 1)) + " km"
+        else:
+            dist_str = str(int(distance_m)) + " m"
+
+        return json.dumps({
+            'sel': 'markAttendance',
+            'stat': 'success',
+            'msg': 'Attendance marked successfully!',
+            'distance': dist_str,
+            'distance_m': distance_m,
+            'timestamp': now_str,
+            'count_today': day_count + 1
+        })
+    except Exception as e:
+        print("Error marking attendance:", e)
+        return json.dumps({'sel': 'markAttendance', 'stat': 'error', 'msg': 'Failed to mark attendance: ' + str(e)})
+
+# Get attendance records (admin - filter by site)
+@app.route("/admin/getAttendance", methods=['POST'])
+def adminGetAttendance():
+    try:
+        data = request.get_json(silent=True)
+        site_code = data.get('site_code', '').strip()
+
+        dbcon = sqlite3.connect(DB_PATH)
+        cursor = dbcon.cursor()
+
+        if site_code:
+            cursor.execute(
+                "SELECT id, staff_name, site_code, latitude, longitude, timestamp, distance_m FROM attendance WHERE site_code=? ORDER BY timestamp DESC LIMIT 50",
+                (site_code,)
+            )
+        else:
+            cursor.execute(
+                "SELECT id, staff_name, site_code, latitude, longitude, timestamp, distance_m FROM attendance ORDER BY timestamp DESC LIMIT 50"
+            )
+
+        rows = cursor.fetchall()
+        dbcon.close()
+
+        records = []
+        for row in rows:
+            dist_m = row[6] if row[6] else 0
+            if dist_m >= 1000:
+                dist_str = str(round(dist_m / 1000, 1)) + " km"
+            else:
+                dist_str = str(int(dist_m)) + " m"
+            records.append({
+                'id': row[0],
+                'staff_name': row[1],
+                'site_code': row[2],
+                'latitude': row[3],
+                'longitude': row[4],
+                'timestamp': row[5],
+                'distance_m': dist_m,
+                'distance_str': dist_str
+            })
+
+        return json.dumps({'sel': 'adminGetAttendance', 'stat': 'success', 'records': records})
+    except Exception as e:
+        print("Error getting attendance:", e)
+        return json.dumps({'sel': 'adminGetAttendance', 'stat': 'error', 'records': []})
+
+# Get attendance records for user view (filter by site, for verification)
+@app.route("/getAttendance", methods=['POST'])
+@cross_origin()
+def getAttendance():
+    try:
+        data = request.get_json(silent=True)
+        site_code = data.get('site_code', '').strip()
+
+        dbcon = sqlite3.connect(DB_PATH)
+        cursor = dbcon.cursor()
+
+        if site_code:
+            cursor.execute(
+                "SELECT staff_name, site_code, latitude, longitude, timestamp, distance_m FROM attendance WHERE site_code=? ORDER BY timestamp DESC LIMIT 50",
+                (site_code,)
+            )
+        else:
+            cursor.execute(
+                "SELECT staff_name, site_code, latitude, longitude, timestamp, distance_m FROM attendance ORDER BY timestamp DESC LIMIT 50"
+            )
+
+        rows = cursor.fetchall()
+        dbcon.close()
+
+        records = []
+        for row in rows:
+            dist_m = row[5] if row[5] else 0
+            if dist_m >= 1000:
+                dist_str = str(round(dist_m / 1000, 1)) + " km"
+            else:
+                dist_str = str(int(dist_m)) + " m"
+            records.append({
+                'staff_name': row[0],
+                'site_code': row[1],
+                'latitude': row[2],
+                'longitude': row[3],
+                'timestamp': row[4],
+                'distance_str': dist_str
+            })
+
+        return json.dumps({'sel': 'getAttendance', 'stat': 'success', 'records': records})
+    except Exception as e:
+        print("Error getting attendance:", e)
+        return json.dumps({'sel': 'getAttendance', 'stat': 'error', 'records': []})
+
+# Admin API: Update site coordinates
+@app.route("/admin/updateSiteCoords", methods=['POST'])
+def adminUpdateSiteCoords():
+    try:
+        data = request.get_json(silent=True)
+        site_code = data.get('site_code', '').strip()
+        site_lat = data.get('site_lat')
+        site_lng = data.get('site_lng')
+
+        if not site_code:
+            return json.dumps({'sel': 'adminUpdateSiteCoords', 'stat': 'error', 'msg': 'Site code is required'})
+
+        dbcon = sqlite3.connect(DB_PATH)
+        cursor = dbcon.cursor()
+        cursor.execute("UPDATE sites SET site_lat=?, site_lng=? WHERE site_code=?", (site_lat, site_lng, site_code))
+        dbcon.commit()
+        dbcon.close()
+
+        return json.dumps({'sel': 'adminUpdateSiteCoords', 'stat': 'success', 'msg': 'Coordinates updated for ' + site_code})
+    except Exception as e:
+        print("Error updating site coords:", e)
+        return json.dumps({'sel': 'adminUpdateSiteCoords', 'stat': 'error', 'msg': 'Failed to update coordinates'})
+
+# Admin API: Get sites with coordinates
+@app.route("/admin/getSitesWithCoords", methods=['POST'])
+def adminGetSitesWithCoords():
+    try:
+        dbcon = sqlite3.connect(DB_PATH)
+        cursor = dbcon.cursor()
+        cursor.execute("SELECT id, site_code, display_order, is_active, site_lat, site_lng FROM sites ORDER BY display_order")
+        rows = cursor.fetchall()
+        dbcon.close()
+
+        sites = []
+        for row in rows:
+            sites.append({
+                'id': row[0],
+                'code': row[1],
+                'order': row[2],
+                'active': row[3],
+                'lat': row[4],
+                'lng': row[5]
+            })
+
+        return json.dumps({'sel': 'adminGetSitesWithCoords', 'stat': 'success', 'sites': sites})
+    except Exception as e:
+        print("Error getting sites with coords:", e)
+        return json.dumps({'sel': 'adminGetSitesWithCoords', 'stat': 'error', 'sites': []})
+
+# ============ END ATTENDANCE APIs ============
 
 # DEBUG ENDPOINT: Check environment variables (TEMPORARY - for troubleshooting)
 @app.route("/admin/debugEnv", methods=['GET'])

@@ -175,6 +175,7 @@ myApp.controller('TabController', function ($scope, $http, $timeout, $window) {
 	    document.getElementById("fdat").className = "list-group-item menutab";
 	    document.getElementById("ydat").className = "list-group-item menutab";
 	    document.getElementById("adat").className = "list-group-item menutab";
+	    document.getElementById("attdat").className = "list-group-item menutab";
 	    if(newTab==3) document.getElementById("fdat").className = "list-group-item active";
 	    if(newTab==4) document.getElementById("gdat").className = "list-group-item active";
 	    if(newTab==5) {
@@ -182,6 +183,7 @@ myApp.controller('TabController', function ($scope, $http, $timeout, $window) {
 	        $scope.dbjsonpost("getallyearlydata",JSON.stringify({}));
 	    }
 	    if(newTab==6) document.getElementById("adat").className = "list-group-item active";
+	    if(newTab==7) document.getElementById("attdat").className = "list-group-item active";
 	}
 	$scope.isSet = function (tabNum) {
 		return $scope.tab1 == tabNum;
@@ -778,5 +780,34 @@ $scope.ival2=2;
 
 myApp.controller('ATabsCtrl', function ($scope) {
 $scope.ival2=2;
+});
+
+// Attendance Controller (User View)
+myApp.controller('AttTabsCtrl', function ($scope, $http) {
+    $scope.attSiteFilter = "";
+    $scope.attRecords = [];
+    $scope.attSiteList = [];
+
+    // Load site list on init
+    var cfig = { headers: { 'Content-Type': 'application/json' } };
+    $http.post("getConfig", "{}", cfig).then(function(response) {
+        $scope.attSiteList = response.data.sites || [];
+    });
+
+    // Load attendance records
+    $scope.loadUserAttendance = function() {
+        var cfig = { headers: { 'Content-Type': 'application/json' } };
+        $http.post("getAttendance", JSON.stringify({site_code: $scope.attSiteFilter}), cfig).then(
+            function(response) {
+                $scope.attRecords = response.data.records || [];
+            },
+            function(error) {
+                console.log("Error loading attendance:", error);
+            }
+        );
+    }
+
+    // Auto-load on init
+    $scope.loadUserAttendance();
 });
 

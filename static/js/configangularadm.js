@@ -17,6 +17,7 @@ amyApp.controller('aTabController', function ($scope, $http) {
         document.getElementById("mcred").className = "list-group-item menutab";
         document.getElementById("sitesmgmt").className = "list-group-item menutab";
         document.getElementById("dbbackup").className = "list-group-item menutab";
+        document.getElementById("attendance").className = "list-group-item menutab";
         document.getElementById("lgout").className = "list-group-item menutab";
 
         if(tabNum == 8)
@@ -60,6 +61,15 @@ amyApp.controller('aTabController', function ($scope, $http) {
             document.getElementById("downloadMsg").innerHTML = "";
             document.getElementById("uploadMsg").innerHTML = "";
             document.getElementById("githubUpdateMsg").innerHTML = "";
+        }
+
+        if(tabNum == 14)
+        {
+            document.getElementById("attendance").className = "list-group-item active";
+            // Load sites list for filter dropdown and attendance records
+            $scope.dbjsonpost("admin/getSites","{}");
+            $scope.dbjsonpost("admin/getAttendance", JSON.stringify({site_code: ""}));
+            $scope.dbjsonpost("admin/getSitesWithCoords", "{}");
         }
     }
 
@@ -198,6 +208,29 @@ amyApp.controller('aTabController', function ($scope, $http) {
                     $scope.dbjsonpost("admin/getSitePairs","{}");
                 } else {
                     document.getElementById("pairsMsg").innerHTML = '<span style="color:red;">' + resp.msg + '</span>';
+                }
+            }
+
+            // Attendance responses
+            if(typ == "adminGetAttendance")
+            {
+                $scope.attendanceRecords = resp.records || [];
+            }
+
+            if(typ == "adminGetSitesWithCoords")
+            {
+                $scope.sitesWithCoords = resp.sites || [];
+            }
+
+            if(typ == "adminUpdateSiteCoords")
+            {
+                var coordsMsgEl = document.getElementById("coordsMsg");
+                if(coordsMsgEl) {
+                    if(resp.stat == "success") {
+                        coordsMsgEl.innerHTML = '<span style="color:green;">' + resp.msg + '</span>';
+                    } else {
+                        coordsMsgEl.innerHTML = '<span style="color:red;">' + resp.msg + '</span>';
+                    }
                 }
             }
 
@@ -598,4 +631,53 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
         );
     }
 
+})
+
+// Attendance Controller
+amyApp.controller('AttendanceCtrl', function ($scope, $http) {
+    $scope.selectedSite = "";
+    $scope.attendanceRecords = [];
+    $scope.sitesWithCoords = [];
+
+    // Load attendance records
+    $scope.loadAttendance = function() {
+        var cfig = {
+            headers: { 'Content-Type': 'application/json' }
+        };
+        $http.post("admin/getAttendance", JSON.stringify({site_code: $scope.selectedSite}), cfig).then(
+            function(response) {
+                $scope.$parent.attendanceRecords = response.data.records || [];
+                $scope.attendanceRecords = response.data.records || [];
+            },
+            function(error) {
+                console.log("Error loading attendance:", error);
+            }
+        );
+    }
+
+    // Save site coordinates
+    $scope.saveSiteCoords = function(site) {
+        var cfig = {
+            headers: { 'Content-Type': 'application/json' }
+        };
+        var data = {
+            site_code: site.code,
+            site_lat: site.lat,
+            site_lng: site.lng
+        };
+        $http.post("admin/updateSiteCoords", JSON.stringify(data), cfig).then(
+            function(response) {
+                var resp = response.data;
+                var coordsMsgEl = document.getElementById("coordsMsg");
+                if(resp.stat == "success") {
+                    coordsMsgEl.innerHTML = '<span style="color:green;">' + resp.msg + '</span>';
+                } else {
+                    coordsMsgEl.innerHTML = '<span style="color:red;">' + resp.msg + '</span>';
+                }
+            },
+            function(error) {
+                document.getElementById("coordsMsg").innerHTML = '<span style="color:red;">Error saving coordinates.</span>';
+            }
+        );
+    }
 })

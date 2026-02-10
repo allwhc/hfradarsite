@@ -108,6 +108,10 @@
         				Backup & Updates
         			</a>
 
+					<a id="attendance" ng-click="setTab(14)" class="list-group-item">
+        				Attendance
+        			</a>
+
 					<a id="lgout" class="list-group-item" href="/logout">Logout</a>
                   </ul>
               </div>
@@ -506,6 +510,115 @@
 											<span style="font-size: 18px;">&#128640;</span> Update from GitHub
 										</button>
 										<div id="githubUpdateMsg" style="margin-top: 10px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div ng-show="isSet(14)">
+				<div id="attendancetabs" ng-controller="AttendanceCtrl" class="mainView">
+					<div class="well pnltab"><label>Attendance Records</label></div>
+					<div class="content">
+						<!-- Site Filter -->
+						<div class="row" style="margin-bottom: 20px;">
+							<div class="col-md-12">
+								<div class="panel panel-info">
+									<div class="panel-heading"><strong>Filter by Site</strong></div>
+									<div class="panel-body">
+										<form class="form-inline">
+											<div class="form-group">
+												<label>Site:&nbsp;</label>
+												<select class="form-control" id="attendanceSiteFilter" ng-model="selectedSite" ng-change="loadAttendance()">
+													<option value="">-- All Sites --</option>
+													<option ng-repeat="site in $parent.sitesList" value="{{site.code}}">{{site.code}}</option>
+												</select>
+											</div>
+											&nbsp;&nbsp;
+											<button class="btn btn-primary" ng-click="loadAttendance()">Refresh</button>
+										</form>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Attendance Table -->
+						<div class="row">
+							<div class="col-md-12">
+								<div style="max-height: 500px; overflow-y: auto;">
+									<table class="table table-bordered table-striped" align="center">
+										<thead>
+											<tr style="background-color:#5bc0de; color:white;">
+												<th width="50">#</th>
+												<th>Staff Name</th>
+												<th>Site</th>
+												<th>Date & Time</th>
+												<th>GPS Coordinates</th>
+												<th>Distance from Site</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr ng-repeat="rec in attendanceRecords">
+												<td>{{$index + 1}}</td>
+												<td><strong>{{rec.staff_name}}</strong></td>
+												<td>{{rec.site_code}}</td>
+												<td>{{rec.timestamp}}</td>
+												<td>{{rec.latitude.toFixed(6)}}, {{rec.longitude.toFixed(6)}}</td>
+												<td>
+													<span ng-class="{'text-success': rec.distance_m < 500, 'text-warning': rec.distance_m >= 500 && rec.distance_m < 2000, 'text-danger': rec.distance_m >= 2000}">
+														<strong>{{rec.distance_str}}</strong>
+													</span>
+													<span ng-if="rec.distance_m == 0" style="color:#999;">(Site coords not set)</span>
+												</td>
+											</tr>
+											<tr ng-if="attendanceRecords.length == 0">
+												<td colspan="6" style="text-align:center; color:#999; padding:30px;">No attendance records found.</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<p style="color:#666; font-size:12px; margin-top:10px;">
+									Showing last 50 records per site. Older records are automatically removed.
+									<br>Distance color: <span style="color:green;">Green = &lt;500m</span> | <span style="color:#f0ad4e;">Yellow = 500m-2km</span> | <span style="color:red;">Red = &gt;2km</span>
+								</p>
+							</div>
+						</div>
+
+						<hr style="margin: 30px 0; border-top: 2px solid #ccc;">
+
+						<!-- Site Coordinates Management -->
+						<div class="row">
+							<div class="col-md-12">
+								<div class="panel panel-success">
+									<div class="panel-heading"><strong>Site Coordinates (for distance calculation)</strong></div>
+									<div class="panel-body">
+										<table class="table table-bordered" align="center">
+											<thead>
+												<tr>
+													<th>Site Code</th>
+													<th>Latitude</th>
+													<th>Longitude</th>
+													<th>Action</th>
+												</tr>
+											</thead>
+											<tbody>
+												<tr ng-repeat="site in sitesWithCoords">
+													<td><strong>{{site.code}}</strong></td>
+													<td>
+														<input type="number" step="0.0000001" class="form-control input-sm" ng-model="site.lat" style="width:150px; display:inline-block;" placeholder="e.g. 16.4776833">
+													</td>
+													<td>
+														<input type="number" step="0.0000001" class="form-control input-sm" ng-model="site.lng" style="width:150px; display:inline-block;" placeholder="e.g. 82.1021000">
+													</td>
+													<td>
+														<button class="btn btn-success btn-sm" ng-click="saveSiteCoords(site)">Save</button>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+										<div id="coordsMsg" style="margin-top: 10px;"></div>
 									</div>
 								</div>
 							</div>
