@@ -2084,6 +2084,58 @@ def getAttendance():
         print("Error getting attendance:", e)
         return json.dumps({'sel': 'getAttendance', 'stat': 'error', 'records': []})
 
+# Get attendance summary - latest entry per site (for user view)
+@app.route("/getAttendanceSummary", methods=['POST'])
+@cross_origin()
+def getAttendanceSummary():
+    try:
+        dbcon = sqlite3.connect(DB_PATH)
+        cursor = dbcon.cursor()
+        # Get all active sites
+        cursor.execute("SELECT site_code, site_lat, site_lng FROM sites WHERE is_active=1 ORDER BY display_order")
+        sites = cursor.fetchall()
+
+        summary = []
+        for site in sites:
+            site_code = site[0]
+            # Get most recent attendance for this site
+            cursor.execute(
+                "SELECT staff_name, latitude, longitude, timestamp, distance_m FROM attendance WHERE site_code=? ORDER BY timestamp DESC LIMIT 1",
+                (site_code,)
+            )
+            row = cursor.fetchone()
+            if row:
+                dist_m = row[4] if row[4] else 0
+                if dist_m >= 1000:
+                    dist_str = str(round(dist_m / 1000, 1)) + " km"
+                else:
+                    dist_str = str(int(dist_m)) + " m"
+                summary.append({
+                    'site_code': site_code,
+                    'staff_name': row[0],
+                    'latitude': row[1],
+                    'longitude': row[2],
+                    'timestamp': row[3],
+                    'distance_m': dist_m,
+                    'distance_str': dist_str
+                })
+            else:
+                summary.append({
+                    'site_code': site_code,
+                    'staff_name': '-',
+                    'latitude': 0,
+                    'longitude': 0,
+                    'timestamp': 'No records',
+                    'distance_m': 0,
+                    'distance_str': '-'
+                })
+
+        dbcon.close()
+        return json.dumps({'sel': 'getAttendanceSummary', 'stat': 'success', 'summary': summary})
+    except Exception as e:
+        print("Error getting attendance summary:", e)
+        return json.dumps({'sel': 'getAttendanceSummary', 'stat': 'error', 'summary': []})
+
 # Admin API: Update site coordinates
 @app.route("/admin/updateSiteCoords", methods=['POST'])
 def adminUpdateSiteCoords():

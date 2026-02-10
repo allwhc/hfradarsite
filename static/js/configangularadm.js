@@ -646,11 +646,25 @@ amyApp.controller('AttendanceCtrl', function ($scope, $http) {
         };
         $http.post("admin/getAttendance", JSON.stringify({site_code: $scope.selectedSite}), cfig).then(
             function(response) {
-                $scope.$parent.attendanceRecords = response.data.records || [];
                 $scope.attendanceRecords = response.data.records || [];
             },
             function(error) {
                 console.log("Error loading attendance:", error);
+            }
+        );
+    }
+
+    // Load sites with coordinates directly
+    $scope.loadSitesWithCoords = function() {
+        var cfig = {
+            headers: { 'Content-Type': 'application/json' }
+        };
+        $http.post("admin/getSitesWithCoords", "{}", cfig).then(
+            function(response) {
+                $scope.sitesWithCoords = response.data.sites || [];
+            },
+            function(error) {
+                console.log("Error loading sites with coords:", error);
             }
         );
     }
@@ -680,4 +694,8 @@ amyApp.controller('AttendanceCtrl', function ($scope, $http) {
             }
         );
     }
+
+    // Auto-load on init
+    $scope.loadAttendance();
+    $scope.loadSitesWithCoords();
 })

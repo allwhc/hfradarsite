@@ -787,6 +787,8 @@ myApp.controller('AttTabsCtrl', function ($scope, $http) {
     $scope.attSiteFilter = "";
     $scope.attRecords = [];
     $scope.attSiteList = [];
+    $scope.attSummary = [];
+    $scope.showAllRecords = false;
 
     // Load site list on init
     var cfig = { headers: { 'Content-Type': 'application/json' } };
@@ -794,7 +796,20 @@ myApp.controller('AttTabsCtrl', function ($scope, $http) {
         $scope.attSiteList = response.data.sites || [];
     });
 
-    // Load attendance records
+    // Load attendance summary (latest entry per site)
+    $scope.loadAttendanceSummary = function() {
+        var cfig = { headers: { 'Content-Type': 'application/json' } };
+        $http.post("getAttendanceSummary", "{}", cfig).then(
+            function(response) {
+                $scope.attSummary = response.data.summary || [];
+            },
+            function(error) {
+                console.log("Error loading attendance summary:", error);
+            }
+        );
+    }
+
+    // Load all attendance records
     $scope.loadUserAttendance = function() {
         var cfig = { headers: { 'Content-Type': 'application/json' } };
         $http.post("getAttendance", JSON.stringify({site_code: $scope.attSiteFilter}), cfig).then(
@@ -807,7 +822,15 @@ myApp.controller('AttTabsCtrl', function ($scope, $http) {
         );
     }
 
-    // Auto-load on init
-    $scope.loadUserAttendance();
+    // Toggle between summary and all records
+    $scope.toggleView = function() {
+        $scope.showAllRecords = !$scope.showAllRecords;
+        if ($scope.showAllRecords) {
+            $scope.loadUserAttendance();
+        }
+    }
+
+    // Auto-load summary on init
+    $scope.loadAttendanceSummary();
 });
 

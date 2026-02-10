@@ -722,56 +722,105 @@
 			  <div id="atttabs" ng-controller="AttTabsCtrl" class="panel panel-default menutab">
 			  <div class="well pnltab"><label>Attendance Records</label></div>
                     <div class="content">
-                        <!-- Site Filter -->
+                        <!-- Toggle Button -->
                         <div class="row" style="margin-bottom: 15px;">
-                            <div class="col-md-6">
-                                <form class="form-inline">
-                                    <div class="form-group">
-                                        <label>Filter by Site:&nbsp;</label>
-                                        <select class="form-control" ng-model="attSiteFilter" ng-change="loadUserAttendance()">
-                                            <option value="">-- All Sites --</option>
-                                            <option ng-repeat="s in attSiteList" value="{{s}}">{{s}}</option>
-                                        </select>
-                                    </div>
-                                    &nbsp;&nbsp;
-                                    <button class="btn btn-primary btn-sm" ng-click="loadUserAttendance()">Refresh</button>
-                                </form>
+                            <div class="col-md-12">
+                                <button class="btn btn-default" ng-click="toggleView()">
+                                    <span ng-hide="showAllRecords">Show All Entries</span>
+                                    <span ng-show="showAllRecords">Show Site Summary</span>
+                                </button>
+                                &nbsp;&nbsp;
+                                <button class="btn btn-primary btn-sm" ng-click="showAllRecords ? loadUserAttendance() : loadAttendanceSummary()">Refresh</button>
                             </div>
                         </div>
 
-                        <!-- Attendance Table -->
-                        <div class="row">
+                        <!-- DEFAULT: Site Summary Table (latest entry per site) -->
+                        <div class="row" ng-hide="showAllRecords">
                             <div class="col-md-12">
-                                <div style="max-height: 450px; overflow-y: auto;">
-                                    <table class="table table-bordered table-striped" align="center">
-                                        <thead>
-                                            <tr style="background-color:#5bc0de; color:white;">
-                                                <th width="50">#</th>
-                                                <th>Staff Name</th>
-                                                <th>Site</th>
-                                                <th>Date & Time</th>
-                                                <th>Distance from Site</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr ng-repeat="rec in attRecords">
-                                                <td>{{$index + 1}}</td>
-                                                <td><strong>{{rec.staff_name}}</strong></td>
-                                                <td>{{rec.site_code}}</td>
-                                                <td>{{rec.timestamp}}</td>
-                                                <td>
-                                                    <span ng-class="{'text-success': rec.distance_str.indexOf('m') > -1 && rec.distance_str.indexOf('km') == -1, 'text-warning': rec.distance_str.indexOf('km') > -1}">
-                                                        <strong>{{rec.distance_str}}</strong>
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            <tr ng-if="attRecords.length == 0">
-                                                <td colspan="5" style="text-align:center; color:#999; padding:30px;">No attendance records found.</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                <table class="table table-bordered table-striped" align="center">
+                                    <thead>
+                                        <tr style="background-color:#5bc0de; color:white;">
+                                            <th width="50">#</th>
+                                            <th>Site</th>
+                                            <th>Last Staff</th>
+                                            <th>Last Attendance</th>
+                                            <th>Coordinates</th>
+                                            <th>Distance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="rec in attSummary">
+                                            <td>{{$index + 1}}</td>
+                                            <td><strong>{{rec.site_code}}</strong></td>
+                                            <td>{{rec.staff_name}}</td>
+                                            <td>{{rec.timestamp}}</td>
+                                            <td>
+                                                <span ng-if="rec.latitude != 0">{{rec.latitude.toFixed(6)}}, {{rec.longitude.toFixed(6)}}</span>
+                                                <span ng-if="rec.latitude == 0" style="color:#999;">-</span>
+                                            </td>
+                                            <td>
+                                                <span ng-class="{'text-success': rec.distance_m > 0 && rec.distance_m < 500, 'text-warning': rec.distance_m >= 500 && rec.distance_m < 2000, 'text-danger': rec.distance_m >= 2000}">
+                                                    <strong>{{rec.distance_str}}</strong>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr ng-if="attSummary.length == 0">
+                                            <td colspan="6" style="text-align:center; color:#999; padding:30px;">No sites found.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p style="color:#666; font-size:12px;">Showing latest attendance entry per site.</p>
+                            </div>
+                        </div>
+
+                        <!-- ALL RECORDS VIEW (toggled) -->
+                        <div ng-show="showAllRecords">
+                            <div class="row" style="margin-bottom: 10px;">
+                                <div class="col-md-6">
+                                    <form class="form-inline">
+                                        <div class="form-group">
+                                            <label>Filter by Site:&nbsp;</label>
+                                            <select class="form-control" ng-model="attSiteFilter" ng-change="loadUserAttendance()">
+                                                <option value="">-- All Sites --</option>
+                                                <option ng-repeat="s in attSiteList" value="{{s}}">{{s}}</option>
+                                            </select>
+                                        </div>
+                                    </form>
                                 </div>
-                                <p style="color:#666; font-size:12px;">Showing last 50 records per site.</p>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div style="max-height: 450px; overflow-y: auto;">
+                                        <table class="table table-bordered table-striped" align="center">
+                                            <thead>
+                                                <tr style="background-color:#5bc0de; color:white;">
+                                                    <th width="50">#</th>
+                                                    <th>Staff Name</th>
+                                                    <th>Site</th>
+                                                    <th>Date & Time</th>
+                                                    <th>Distance from Site</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr ng-repeat="rec in attRecords">
+                                                    <td>{{$index + 1}}</td>
+                                                    <td><strong>{{rec.staff_name}}</strong></td>
+                                                    <td>{{rec.site_code}}</td>
+                                                    <td>{{rec.timestamp}}</td>
+                                                    <td>
+                                                        <span ng-class="{'text-success': rec.distance_str.indexOf('m') > -1 && rec.distance_str.indexOf('km') == -1, 'text-warning': rec.distance_str.indexOf('km') > -1}">
+                                                            <strong>{{rec.distance_str}}</strong>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <tr ng-if="attRecords.length == 0">
+                                                    <td colspan="5" style="text-align:center; color:#999; padding:30px;">No attendance records found.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p style="color:#666; font-size:12px;">Showing last 50 records per site.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
