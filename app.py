@@ -2053,19 +2053,21 @@ def getAttendance():
     try:
         data = request.get_json(silent=True)
         site_code = data.get('site_code', '').strip()
+        filter_date = data.get('date', '').strip()
 
         dbcon = sqlite3.connect(DB_PATH)
         cursor = dbcon.cursor()
 
+        query = "SELECT staff_name, site_code, latitude, longitude, timestamp, distance_m FROM attendance WHERE 1=1"
+        params = []
         if site_code:
-            cursor.execute(
-                "SELECT staff_name, site_code, latitude, longitude, timestamp, distance_m FROM attendance WHERE site_code=? ORDER BY timestamp DESC LIMIT 50",
-                (site_code,)
-            )
-        else:
-            cursor.execute(
-                "SELECT staff_name, site_code, latitude, longitude, timestamp, distance_m FROM attendance ORDER BY timestamp DESC LIMIT 50"
-            )
+            query += " AND site_code=?"
+            params.append(site_code)
+        if filter_date:
+            query += " AND DATE(timestamp)=?"
+            params.append(filter_date)
+        query += " ORDER BY timestamp DESC LIMIT 100"
+        cursor.execute(query, params)
 
         rows = cursor.fetchall()
         dbcon.close()
