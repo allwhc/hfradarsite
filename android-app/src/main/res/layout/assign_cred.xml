@@ -189,6 +189,153 @@
                         android:paddingTop="4dp"
                         android:paddingBottom="10dp" />
 
+                    <!-- View Attendance (Admin) -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#E0E0E0"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp" />
+
+                    <LinearLayout
+                        android:id="@+id/attLockedSection"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="View Attendance"
+                            android:textColor="#000080"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <Button
+                            android:id="@+id/btnUnlockAttendance"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:text="Unlock"
+                            android:textAllCaps="false"
+                            android:textColor="#fff"
+                            android:textSize="13sp"
+                            android:background="#5fb0c9"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/attPanel"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:paddingTop="10dp">
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:text="View Attendance"
+                            android:textColor="#000080"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:paddingBottom="8dp" />
+
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="50dp"
+                                android:layout_height="wrap_content"
+                                android:text="Date"
+                                android:textColor="#333333"
+                                android:textSize="14sp" />
+
+                            <EditText
+                                android:id="@+id/attDate"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:hint="YYYY-MM-DD"
+                                android:inputType="date"
+                                android:focusable="false"
+                                android:clickable="true"
+                                android:textSize="14sp" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingTop="6dp">
+
+                            <TextView
+                                android:layout_width="50dp"
+                                android:layout_height="wrap_content"
+                                android:text="Site"
+                                android:textColor="#333333"
+                                android:textSize="14sp" />
+
+                            <Spinner
+                                android:id="@+id/attSiteSpinner"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content" />
+
+                        </LinearLayout>
+
+                        <Button
+                            android:id="@+id/btnFetchAttendance"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:background="#2196F3"
+                            android:text="Fetch Attendance"
+                            android:textAllCaps="false"
+                            android:textColor="#fff"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:id="@+id/tvAttResult"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="13sp"
+                            android:textColor="#333333"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp" />
+
+                        <ScrollView
+                            android:id="@+id/attTableScroll"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility="gone"
+                            android:maxHeight="300dp">
+
+                            <HorizontalScrollView
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content">
+
+                                <TableLayout
+                                    android:id="@+id/attTable"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:stretchColumns="0"
+                                    android:padding="4dp" />
+
+                            </HorizontalScrollView>
+
+                        </ScrollView>
+
+                    </LinearLayout>
+
                     <Button
                         android:id="@+id/btnLogin"
                         android:layout_width="fill_parent"
