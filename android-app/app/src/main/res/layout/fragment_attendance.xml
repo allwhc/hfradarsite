@@ -21,26 +21,6 @@
             android:gravity="center"
             android:layout_marginBottom="20dp" />
 
-        <!-- Name Input -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Your Name"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="#555555"
-            android:layout_marginBottom="4dp" />
-
-        <EditText
-            android:id="@+id/edtAttendanceName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Enter your name"
-            android:inputType="textPersonName"
-            android:padding="12dp"
-            android:background="@drawable/edittext_border"
-            android:layout_marginBottom="16dp" />
-
         <!-- Site Dropdown -->
         <TextView
             android:layout_width="match_parent"
@@ -57,6 +37,26 @@
             android:layout_height="wrap_content"
             android:background="@drawable/spinner_background"
             android:padding="12dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Technician Name -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Technician Name"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#555555"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/edtAttendanceName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Technician name"
+            android:inputType="textPersonName"
+            android:padding="12dp"
+            android:background="@drawable/edittext_border"
             android:layout_marginBottom="20dp" />
 
         <!-- Mark Attendance Button -->
