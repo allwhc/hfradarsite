@@ -752,9 +752,9 @@ myApp.controller('FTabsCtrl', function ($scope) {
 	        var monthName = monthNames[monthNum];
 
 	        // Show confirmation dialog
-	        if(confirm("Send Monthly Report data for " + monthName + " " + x3 + " to Google Sheets?"))
+	        if(confirm("Send Monthly Report data for " + monthName + " " + x3 + "?"))
 	        {
-	            document.getElementById("sendGsheetMsg").innerHTML = '<span style="color:blue;">Sending to Google Sheets...</span>';
+	            document.getElementById("sendGsheetMsg").innerHTML = '<span style="color:blue;">Sending...</span>';
 	            var wifistr = '{"mon":"' + x2 + '","yr":"' + x3 + '"}';
 	            var wifijsonObj = JSON.parse(wifistr);
 	            $scope.$parent.dbjsonpost("exportMonthlyData",JSON.stringify(wifijsonObj));

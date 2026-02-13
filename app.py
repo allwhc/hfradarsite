@@ -704,10 +704,10 @@ def exportMonthlyData():
         selyr = int(data1["yr"])
         # Call the GSheet function with user-selected month/year
         insert_data_to_gsheet(selmon, selyr)
-        return json.dumps({'sel':'sendToGsheet', 'stat':'success', 'msg':'Data for '+lstmn[(selmon-1)]+' '+str(selyr)+' exported successfully!'})
+        return json.dumps({'sel':'sendToGsheet', 'stat':'success', 'msg':'Data for '+lstmn[(selmon-1)]+' '+str(selyr)+' sent successfully!'})
     except Exception as e:
         print("Error exporting data:", e)
-        return json.dumps({'sel':'sendToGsheet', 'stat':'error', 'msg':'Failed to export data. Please try again.'})
+        return json.dumps({'sel':'sendToGsheet', 'stat':'error', 'msg':'Failed to send data. Please try again.'})
 
 def getdatayr(indx2,data1):
     selmon = int(data1["mon"])
