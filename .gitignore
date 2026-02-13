@@ -4,8 +4,10 @@ __pycache__/
 *$py.class
 *.pyc
 
-# Credentials
-# Note: bigbask credentials file is tracked for deployment
+# Credentials - NEVER commit to git (Google auto-disables exposed keys)
+*.json
+!webapp/manifest.json
+!package.json
 
 # Database
 # Note: users.db is tracked for deployment
