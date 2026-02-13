@@ -757,7 +757,7 @@ myApp.controller('FTabsCtrl', function ($scope) {
 	            document.getElementById("sendGsheetMsg").innerHTML = '<span style="color:blue;">Sending to Google Sheets...</span>';
 	            var wifistr = '{"mon":"' + x2 + '","yr":"' + x3 + '"}';
 	            var wifijsonObj = JSON.parse(wifistr);
-	            $scope.$parent.dbjsonpost("sendToGsheet",JSON.stringify(wifijsonObj));
+	            $scope.$parent.dbjsonpost("exportMonthlyData",JSON.stringify(wifijsonObj));
 	        }
 		}
 	}
