@@ -14,6 +14,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 import android.content.Intent;
+import android.os.AsyncTask;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
     DrawerLayout dLayout;
@@ -35,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Schedule monthly reminder notifications
         scheduleMonthlyReminder();
+
+        // Auto-fetch technicians map if not present
+        autoFetchConfig();
     }
 
     private void scheduleMonthlyReminder() {
@@ -112,4 +123,55 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
+    private void autoFetchConfig() {
+        SharedPreferences prefs = getSharedPreferences("MyPrefs1", Context.MODE_PRIVATE);
+        String techMap = prefs.getString("technicians_map", "");
+        if (!techMap.isEmpty()) return; // already have it
+
+        String baseUrl = prefs.getString("serv_url", "https://hfradarsite.pythonanywhere.com");
+        new AsyncTask<String, Void, Void>() {
+            @Override
+            protected Void doInBackground(String... params) {
+                try {
+                    URL url = new URL(params[0] + "/getConfig");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    conn.setDoOutput(true);
+                    conn.setConnectTimeout(10000);
+                    conn.setReadTimeout(10000);
+                    OutputStream os = conn.getOutputStream();
+                    os.write("{}".getBytes("UTF-8"));
+                    os.close();
+
+                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) sb.append(line);
+                    br.close();
+                    conn.disconnect();
+
+                    JSONObject resp = new JSONObject(sb.toString());
+                    SharedPreferences.Editor editor = prefs.edit();
+                    if (resp.has("sites")) {
+                        JSONArray sites = resp.getJSONArray("sites");
+                        StringBuilder csv = new StringBuilder();
+                        for (int i = 0; i < sites.length(); i++) {
+                            if (i > 0) csv.append(",");
+                            csv.append(sites.getString(i));
+                        }
+                        editor.putString("sites_list", csv.toString());
+                    }
+                    if (resp.has("technicians")) {
+                        editor.putString("technicians_map", resp.getJSONObject("technicians").toString());
+                    }
+                    editor.apply();
+                } catch (Exception e) {
+                    // silent fail
+                }
+                return null;
+            }
+        }.execute(baseUrl);
+    }
     }

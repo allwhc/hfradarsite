@@ -426,9 +426,15 @@ public class AssignCredentials extends Fragment {
                             sitesList.append(sitesArray.getString(i));
                         }
 
-                        // Save to SharedPreferences
+                        // Save sites and technicians to SharedPreferences
                         SharedPreferences.Editor editor = sharedpreferences.edit();
                         editor.putString(PREF_SITES_LIST, sitesList.toString());
+
+                        // Save technicians map if available
+                        if (response.has("technicians")) {
+                            JSONObject techObj = response.getJSONObject("technicians");
+                            editor.putString("technicians_map", techObj.toString());
+                        }
                         editor.apply();
 
                         tvSiteListStatus.setText("Sites updated: " + sitesArray.length() + " sites (" + sitesList + ")");

@@ -14,6 +14,7 @@ import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -70,21 +71,39 @@ public class AttendanceFragment extends Fragment {
         tvGpsStatus = view.findViewById(R.id.tvGpsStatus);
         progressBar = view.findViewById(R.id.progressAttendance);
 
-        // Load saved name from preferences
-        SharedPreferences prefs = getActivity().getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
-        String savedName = prefs.getString("attendance_name", "");
-        if (!savedName.isEmpty()) {
-            edtName.setText(savedName);
-        }
-
         // Load sites into spinner
         loadSitesList();
 
-        // Set last selected site
+        // Set last selected site: use attendance site, or fall back to last sent report site
+        SharedPreferences prefs = getActivity().getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
         String lastSite = prefs.getString("attendance_last_site", "");
+        if (lastSite.isEmpty()) {
+            lastSite = prefs.getString("last_sent_site", "");
+        }
         if (!lastSite.isEmpty()) {
             setSpinnerSelection(lastSite);
         }
+
+        // Auto-fill technician name based on selected site
+        autoFillTechnician();
+
+        // Site selection listener - always auto-fill technician name on site change
+        spnSite.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+                if (position > 0) {
+                    String site = parent.getItemAtPosition(position).toString();
+                    String techName = getTechnicianForSite(site);
+                    if (!techName.isEmpty()) {
+                        edtName.setText(techName);
+                    }
+                } else {
+                    edtName.setText("");
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
 
         // Mark attendance button
         btnMark.setOnClickListener(new View.OnClickListener() {
@@ -95,6 +114,32 @@ public class AttendanceFragment extends Fragment {
         });
 
         return view;
+    }
+
+    private String getTechnicianForSite(String siteCode) {
+        SharedPreferences prefs = getActivity().getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
+        String techJson = prefs.getString("technicians_map", "");
+        if (!techJson.isEmpty()) {
+            try {
+                JSONObject techMap = new JSONObject(techJson);
+                if (techMap.has(siteCode)) {
+                    return techMap.getString(siteCode);
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        return "";
+    }
+
+    private void autoFillTechnician() {
+        String selectedSite = spnSite.getSelectedItem() != null ? spnSite.getSelectedItem().toString() : "";
+        if (!selectedSite.isEmpty() && !selectedSite.equals("-- Select Site --")) {
+            String techName = getTechnicianForSite(selectedSite);
+            if (!techName.isEmpty()) {
+                edtName.setText(techName);
+            }
+        }
     }
 
     private void loadSitesList() {
@@ -181,7 +226,7 @@ public class AttendanceFragment extends Fragment {
         // Show loading
         progressBar.setVisibility(View.VISIBLE);
         btnMark.setEnabled(false);
-        tvGpsStatus.setText("Acquiring GPS coordinates...");
+        tvGpsStatus.setText("Submitting attendance...");
         layoutResult.setVisibility(View.GONE);
 
         // Get location
@@ -265,8 +310,8 @@ public class AttendanceFragment extends Fragment {
                                     public void run() {
                                         progressBar.setVisibility(View.GONE);
                                         btnMark.setEnabled(true);
-                                        tvGpsStatus.setText("Could not get GPS location. Please try again in an open area.");
-                                        Toast.makeText(getActivity(), "Unable to get GPS location. Please try again.", Toast.LENGTH_LONG).show();
+                                        tvGpsStatus.setText("Could not mark attendance. Please try again in an open area.");
+                                        Toast.makeText(getActivity(), "Unable to mark attendance. Please try again.", Toast.LENGTH_LONG).show();
                                     }
                                 });
                             }
@@ -278,7 +323,7 @@ public class AttendanceFragment extends Fragment {
         } catch (Exception e) {
             progressBar.setVisibility(View.GONE);
             btnMark.setEnabled(true);
-            Toast.makeText(getActivity(), "Error getting location: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), "Error marking attendance: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -369,13 +414,10 @@ public class AttendanceFragment extends Fragment {
                     tvStatus.setTextColor(0xFF28A745);
                     tvStatus.setText("Attendance Marked Successfully!");
 
-                    String details = "Time: " + resp.optString("timestamp", "") + "\n";
-                    details += "Location: " + String.format("%.6f", lat) + ", " + String.format("%.6f", lng) + "\n";
-                    details += "Distance from site: " + resp.optString("distance", "N/A") + "\n";
-                    details += "Today's count: " + resp.optInt("count_today", 1) + "/10";
+                    String details = "Time: " + resp.optString("timestamp", "");
                     tvDetails.setText(details);
 
-                    tvGpsStatus.setText("GPS coordinates captured successfully");
+                    tvGpsStatus.setText("");
                 } else {
                     layoutResult.setVisibility(View.VISIBLE);
                     layoutResult.setBackgroundColor(0xFFFFF3CD);

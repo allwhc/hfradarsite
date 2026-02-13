@@ -14,6 +14,7 @@ import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -70,21 +71,39 @@ public class AttendanceFragment extends Fragment {
         tvGpsStatus = view.findViewById(R.id.tvGpsStatus);
         progressBar = view.findViewById(R.id.progressAttendance);
 
-        // Load saved name from preferences
-        SharedPreferences prefs = getActivity().getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
-        String savedName = prefs.getString("attendance_name", "");
-        if (!savedName.isEmpty()) {
-            edtName.setText(savedName);
-        }
-
         // Load sites into spinner
         loadSitesList();
 
-        // Set last selected site
+        // Set last selected site: use attendance site, or fall back to last sent report site
+        SharedPreferences prefs = getActivity().getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
         String lastSite = prefs.getString("attendance_last_site", "");
+        if (lastSite.isEmpty()) {
+            lastSite = prefs.getString("last_sent_site", "");
+        }
         if (!lastSite.isEmpty()) {
             setSpinnerSelection(lastSite);
         }
+
+        // Auto-fill technician name based on selected site
+        autoFillTechnician();
+
+        // Site selection listener - always auto-fill technician name on site change
+        spnSite.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+                if (position > 0) {
+                    String site = parent.getItemAtPosition(position).toString();
+                    String techName = getTechnicianForSite(site);
+                    if (!techName.isEmpty()) {
+                        edtName.setText(techName);
+                    }
+                } else {
+                    edtName.setText("");
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
 
         // Mark attendance button
         btnMark.setOnClickListener(new View.OnClickListener() {
@@ -95,6 +114,32 @@ public class AttendanceFragment extends Fragment {
         });
 
         return view;
+    }
+
+    private String getTechnicianForSite(String siteCode) {
+        SharedPreferences prefs = getActivity().getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
+        String techJson = prefs.getString("technicians_map", "");
+        if (!techJson.isEmpty()) {
+            try {
+                JSONObject techMap = new JSONObject(techJson);
+                if (techMap.has(siteCode)) {
+                    return techMap.getString(siteCode);
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        return "";
+    }
+
+    private void autoFillTechnician() {
+        String selectedSite = spnSite.getSelectedItem() != null ? spnSite.getSelectedItem().toString() : "";
+        if (!selectedSite.isEmpty() && !selectedSite.equals("-- Select Site --")) {
+            String techName = getTechnicianForSite(selectedSite);
+            if (!techName.isEmpty()) {
+                edtName.setText(techName);
+            }
+        }
     }
 
     private void loadSitesList() {

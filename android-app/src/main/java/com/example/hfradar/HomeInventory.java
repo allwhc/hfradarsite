@@ -924,6 +924,10 @@ public class HomeInventory extends Fragment {
                 tvDataStatus.setText("Sent");
                 tvDataStatus.setTextColor(0xFF4CAF50);
 
+                // Save last sent site for attendance pre-fill
+                SharedPreferences configPrefs = getActivity().getSharedPreferences(CONFIG_PREFS, Context.MODE_PRIVATE);
+                configPrefs.edit().putString("last_sent_site", selectedSite).apply();
+
                 Toast.makeText(getActivity(), "Data sent successfully!", Toast.LENGTH_SHORT).show();
             } else {
                 // Add failed entry to history
