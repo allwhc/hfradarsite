@@ -707,7 +707,7 @@ def exportMonthlyData():
         return json.dumps({'sel':'sendToGsheet', 'stat':'success', 'msg':'Data for '+lstmn[(selmon-1)]+' '+str(selyr)+' sent successfully!'})
     except Exception as e:
         print("Error exporting data:", e)
-        return json.dumps({'sel':'sendToGsheet', 'stat':'error', 'msg':'Failed to send data. Please try again.'})
+        return json.dumps({'sel':'sendToGsheet', 'stat':'error', 'msg':'Failed to send data: ' + str(e)})
 
 def getdatayr(indx2,data1):
     selmon = int(data1["mon"])
