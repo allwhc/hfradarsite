@@ -139,6 +139,44 @@ def migrate_sites_add_coords():
 
 migrate_sites_add_coords()
 
+# Add technician column to sites table (migration)
+def migrate_sites_add_technician():
+    dbcon = None
+    try:
+        dbcon = sqlite3.connect(DB_PATH)
+        cursor = dbcon.cursor()
+        cursor.execute("PRAGMA table_info(sites)")
+        cols = [row[1] for row in cursor.fetchall()]
+        if 'technician' not in cols:
+            cursor.execute("ALTER TABLE sites ADD COLUMN technician VARCHAR(100) DEFAULT ''")
+            dbcon.commit()
+
+            # Pre-populate known technician names
+            known_techs = {
+                'Yanm': 'Mr.Rajashekar',
+                'Mach': 'Mr.Sairam',
+                'Wasi': 'Mr.Hitesh Tandel',
+                'Jgri': 'Mr.Gaurang Trivedi',
+                'Puri': 'Mr. Gopal Jena',
+                'Gopa': 'Mr. Samir Malik',
+                'Kalp': 'Mr. A Arvind',
+                'Cuda': 'Mr. Ilayabharati',
+                'Htby': 'Mr. Srinivas',
+                'Ptbl': 'Mr. Venkatesan',
+            }
+            for code, tech in known_techs.items():
+                cursor.execute("UPDATE sites SET technician=? WHERE site_code=?", (tech, code))
+            dbcon.commit()
+            print("Technician column added and populated")
+        cursor.close()
+    except Exception as e:
+        print("Error migrating technician column:", e)
+    finally:
+        if dbcon:
+            dbcon.close()
+
+migrate_sites_add_technician()
+
 # Initialize attendance table
 def init_attendance_table():
     dbcon = None
@@ -213,6 +251,16 @@ def get_active_sites():
         pass
     # Fallback to hardcoded list if database fails
     return ["Cuda","Kalp","Mach","Yanm","Wasi","Jgri","Gopa","Puri","Ptbl","Htby"]
+
+# Get site-technician mapping for active sites
+def get_site_technicians():
+    try:
+        srow, stat = dboper("SELECT site_code, technician FROM sites WHERE is_active=1 ORDER BY display_order", 1)
+        if srow:
+            return {row[0]: (row[1] or '') for row in srow}
+    except:
+        pass
+    return {}
 
 # Get all sites (for admin)
 def get_all_sites():
@@ -1161,7 +1209,8 @@ def getactivationstat():
 @cross_origin()
 def getConfig():
     sites = get_active_sites()
-    return json.dumps({'sel':'getConfig', 'sites': sites, 'version': 1})
+    technicians = get_site_technicians()
+    return json.dumps({'sel':'getConfig', 'sites': sites, 'technicians': technicians, 'version': 1})
 
 # Admin API: Get all sites (including inactive)
 @app.route("/admin/getSites", methods=['POST'])
@@ -2153,17 +2202,18 @@ def adminUpdateSiteCoords():
         site_code = data.get('site_code', '').strip()
         site_lat = data.get('site_lat')
         site_lng = data.get('site_lng')
+        technician = data.get('technician', '')
 
         if not site_code:
             return json.dumps({'sel': 'adminUpdateSiteCoords', 'stat': 'error', 'msg': 'Site code is required'})
 
         dbcon = sqlite3.connect(DB_PATH)
         cursor = dbcon.cursor()
-        cursor.execute("UPDATE sites SET site_lat=?, site_lng=? WHERE site_code=?", (site_lat, site_lng, site_code))
+        cursor.execute("UPDATE sites SET site_lat=?, site_lng=?, technician=? WHERE site_code=?", (site_lat, site_lng, technician, site_code))
         dbcon.commit()
         dbcon.close()
 
-        return json.dumps({'sel': 'adminUpdateSiteCoords', 'stat': 'success', 'msg': 'Coordinates updated for ' + site_code})
+        return json.dumps({'sel': 'adminUpdateSiteCoords', 'stat': 'success', 'msg': 'Details updated for ' + site_code})
     except Exception as e:
         print("Error updating site coords:", e)
         return json.dumps({'sel': 'adminUpdateSiteCoords', 'stat': 'error', 'msg': 'Failed to update coordinates'})
@@ -2174,7 +2224,7 @@ def adminGetSitesWithCoords():
     try:
         dbcon = sqlite3.connect(DB_PATH)
         cursor = dbcon.cursor()
-        cursor.execute("SELECT id, site_code, display_order, is_active, site_lat, site_lng FROM sites ORDER BY display_order")
+        cursor.execute("SELECT id, site_code, display_order, is_active, site_lat, site_lng, technician FROM sites ORDER BY display_order")
         rows = cursor.fetchall()
         dbcon.close()
 
@@ -2186,7 +2236,8 @@ def adminGetSitesWithCoords():
                 'order': row[2],
                 'active': row[3],
                 'lat': row[4],
-                'lng': row[5]
+                'lng': row[5],
+                'technician': row[6] or ''
             })
 
         return json.dumps({'sel': 'adminGetSitesWithCoords', 'stat': 'success', 'sites': sites})

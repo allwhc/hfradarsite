@@ -677,7 +677,8 @@ amyApp.controller('AttendanceCtrl', function ($scope, $http) {
         var data = {
             site_code: site.code,
             site_lat: site.lat,
-            site_lng: site.lng
+            site_lng: site.lng,
+            technician: site.technician || ''
         };
         $http.post("admin/updateSiteCoords", JSON.stringify(data), cfig).then(
             function(response) {
