@@ -1,6 +1,59 @@
-# HF Radar Server - PythonAnywhere Deployment
+# HF Radar - Complete System
 
-Flask web application for HF Radar data management and reporting.
+Flask web application for HF Radar data management and reporting, plus Android mobile app for data collection.
+
+## 📦 What's in This Repository
+
+This repository contains **two main components**:
+
+1. **Flask Web Server** - Backend API and admin dashboard (PythonAnywhere)
+2. **Android Mobile App** - Field data collection app
+
+## 🔗 Quick Links
+
+- **Repository**: https://github.com/allwhc/hfradarsite
+- **Download ZIP**: https://github.com/allwhc/hfradarsite/archive/refs/heads/main.zip
+- **Live Website**: https://hfradarsite.pythonanywhere.com
+- **Admin Panel**: https://hfradarsite.pythonanywhere.com/admin
+
+---
+
+## 📱 Android Mobile App
+
+### Download Pre-built APK
+
+**Location**: `android-app/prebuilt/app-debug-latest.apk`
+
+Or browse: https://github.com/allwhc/hfradarsite/tree/main/android-app/prebuilt
+
+### Build from Source
+
+**Quick Build** (Windows):
+```bash
+cd android-app
+setup-and-build.bat
+```
+
+**Quick Build** (Linux/Mac):
+```bash
+cd android-app
+chmod +x setup-and-build.sh
+./setup-and-build.sh
+```
+
+**Detailed instructions**: See [android-app/README.md](android-app/README.md)
+
+### App Features
+- ✅ Notification permission request on first launch
+- ✅ Monthly reminder notifications
+- ✅ QR code scanning for site verification
+- ✅ TSU data upload to server
+- ✅ Data history tracking
+- ✅ Default server: https://hfradarsite.pythonanywhere.com
+
+---
+
+## 🌐 Flask Web Server
 
 ## File Structure
 
@@ -80,7 +133,7 @@ In the **Web** tab, add static files:
 ### 6. Required Files (NOT in Git)
 Upload these files manually to `/home/hfradarsite/deploy/`:
 - `users.db` - SQLite database
-- `bigbask-395319-717a61a56bff.json` - Google Sheets credentials
+- `bigbask-395319-a062acf42b85.json` - Google Sheets credentials
 
 ### 7. Update from GitHub
 When you push changes to GitHub:
