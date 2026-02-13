@@ -61,6 +61,7 @@ public class HomeInventory extends Fragment {
     private List<Spinner> radialSpinners = new ArrayList<>();
     private List<ImageButton> noteButtons = new ArrayList<>();
     private boolean dataSaved = false;
+    private boolean dataLocked = false;
     private boolean isFromQRScan = false;
     private int[] qrRadialData = null;
     private boolean isParsingQRData = false; // Flag to prevent spinner listeners during QR parsing
@@ -244,6 +245,8 @@ public class HomeInventory extends Fragment {
         }
 
         dataSaved = false;
+        dataLocked = false;
+        btnSave.setText("SAVE & LOCK");
         btnSend.setEnabled(false);
         btnSend.setAlpha(0.5f);
         tvDataStatus.setVisibility(View.GONE);
@@ -572,19 +575,26 @@ public class HomeInventory extends Fragment {
                 }
 
                 dataSaved = true;
-                btnSend.setEnabled(true);
-                btnSend.setAlpha(1.0f);
+                updateTotalRadial();
 
                 if (savedData.isSent) {
+                    dataLocked = false;
+                    setGridLocked(false);
+                    btnSave.setText("SAVE & LOCK");
+                    btnSend.setEnabled(false);
+                    btnSend.setAlpha(0.5f);
                     tvDataStatus.setText("Sent");
                     tvDataStatus.setTextColor(0xFF4CAF50);
                 } else {
-                    tvDataStatus.setText("Saved");
+                    dataLocked = true;
+                    setGridLocked(true);
+                    btnSave.setText("UNLOCK & EDIT");
+                    btnSend.setEnabled(true);
+                    btnSend.setAlpha(1.0f);
+                    tvDataStatus.setText("Saved & Locked");
                     tvDataStatus.setTextColor(0xFFFF9800);
                 }
                 tvDataStatus.setVisibility(View.VISIBLE);
-
-                updateTotalRadial();
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -593,7 +603,8 @@ public class HomeInventory extends Fragment {
     }
 
     private void setupButtons() {
-        btnSave.setOnClickListener(v -> saveData());
+        btnSave.setText("SAVE & LOCK");
+        btnSave.setOnClickListener(v -> toggleLock());
         btnSend.setOnClickListener(v -> sendData());
 
         // QR Scan button - navigate to scanner
@@ -643,13 +654,45 @@ public class HomeInventory extends Fragment {
         // Update total
         tvTotalRadial.setText("0");
 
-        // Mark as unsaved
+        // Mark as unsaved and unlocked
         dataSaved = false;
+        dataLocked = false;
+        btnSave.setText("SAVE & LOCK");
         btnSend.setEnabled(false);
         btnSend.setAlpha(0.5f);
         tvDataStatus.setVisibility(View.GONE);
+        setGridLocked(false);
 
         Toast.makeText(getActivity(), "All values reset to 0", Toast.LENGTH_SHORT).show();
+    }
+
+    private void setGridLocked(boolean locked) {
+        for (Spinner sp : radialSpinners) {
+            sp.setEnabled(!locked);
+            sp.setAlpha(locked ? 0.5f : 1.0f);
+        }
+        for (ImageButton nb : noteButtons) {
+            nb.setEnabled(!locked);
+            nb.setAlpha(locked ? 0.5f : 1.0f);
+        }
+        llDaysList.setAlpha(locked ? 0.7f : 1.0f);
+    }
+
+    private void toggleLock() {
+        if (dataLocked) {
+            // Unlock
+            dataLocked = false;
+            dataSaved = false;
+            setGridLocked(false);
+            btnSave.setText("SAVE & LOCK");
+            btnSend.setEnabled(false);
+            btnSend.setAlpha(0.5f);
+            tvDataStatus.setVisibility(View.GONE);
+            Toast.makeText(getActivity(), "Unlocked for editing", Toast.LENGTH_SHORT).show();
+        } else {
+            // Save & Lock
+            saveData();
+        }
     }
 
     private void saveData() {
@@ -699,13 +742,16 @@ public class HomeInventory extends Fragment {
                 reasonsArray.toString(), total);
 
         dataSaved = true;
+        dataLocked = true;
+        setGridLocked(true);
+        btnSave.setText("UNLOCK & EDIT");
         btnSend.setEnabled(true);
         btnSend.setAlpha(1.0f);
-        tvDataStatus.setText("Saved");
+        tvDataStatus.setText("Saved & Locked");
         tvDataStatus.setTextColor(0xFFFF9800);
         tvDataStatus.setVisibility(View.VISIBLE);
 
-        Toast.makeText(getActivity(), "Data saved successfully", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), "Data saved & locked", Toast.LENGTH_SHORT).show();
     }
 
     private void sendData() {
@@ -868,6 +914,13 @@ public class HomeInventory extends Fragment {
                 // Add to history
                 historyDb.addHistoryEntry(selectedSite, selectedMonth, selectedYear, total, method, "Success");
 
+                // Unlock after send
+                dataLocked = false;
+                setGridLocked(false);
+                btnSave.setText("SAVE & LOCK");
+                btnSend.setEnabled(false);
+                btnSend.setAlpha(0.5f);
+
                 tvDataStatus.setText("Sent");
                 tvDataStatus.setTextColor(0xFF4CAF50);
 
@@ -917,68 +970,40 @@ public class HomeInventory extends Fragment {
             String[] parts = qrData.split(":");
 
             if (parts.length >= 4) {
-                // Set flag to prevent spinner listeners from triggering
-                isParsingQRData = true;
-
                 String site = parts[0];
                 int month = Integer.parseInt(parts[1]);
                 int year = Integer.parseInt(parts[2]);
 
-                // Set spinners - use case-insensitive matching for site
-                for (int i = 0; i < sites.length; i++) {
-                    if (sites[i].equalsIgnoreCase(site)) {
-                        spinnerSite.setSelection(i);
-                        selectedSite = sites[i]; // Use the correctly-cased site name
-                        break;
-                    }
-                }
-
-                spinnerMonth.setSelection(month - 1);
-                selectedMonth = month;
-
-                // Find year in spinner
-                int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-                int yearIndex = currentYear - year;
-                if (yearIndex >= 0 && yearIndex < 6) {
-                    spinnerYear.setSelection(yearIndex);
-                    selectedYear = year;
-                }
-
-                // Parse radial data
+                // Parse radial data FIRST before touching UI
                 // Format: Site:Month:Year:Day1:Day2:...:DayN:Total:Hex1:Hex2:...
-                // Radial data starts at index 3 and goes for exactly daysInMonth elements
                 int daysInMonth = getDaysInMonth(month, year);
-                qrRadialData = new int[daysInMonth];
+                int[] tempRadialData = new int[daysInMonth];
 
                 int calculatedTotal = 0;
 
-                // Only parse exactly daysInMonth values starting from index 3
                 for (int day = 0; day < daysInMonth; day++) {
                     int partIndex = 3 + day;
                     if (partIndex < parts.length) {
                         try {
-                            // Skip if it starts with 0x (hex value)
                             if (!parts[partIndex].startsWith("0x")) {
                                 int value = Integer.parseInt(parts[partIndex]);
                                 if (value >= 0 && value <= 24) {
-                                    qrRadialData[day] = value;
+                                    tempRadialData[day] = value;
                                     calculatedTotal += value;
                                 }
                             }
                         } catch (NumberFormatException e) {
-                            qrRadialData[day] = 0;
+                            tempRadialData[day] = 0;
                         }
                     }
                 }
 
-                // Verify total - Total is at index (3 + daysInMonth)
+                // Verify total BEFORE updating any UI
                 int totalIndex = 3 + daysInMonth;
                 if (totalIndex < parts.length) {
                     try {
                         int qrTotal = Integer.parseInt(parts[totalIndex]);
                         if (qrTotal != calculatedTotal) {
-                            // Total mismatch - QR may be invalid
-                            isParsingQRData = false;
                             Toast.makeText(getActivity(),
                                 "QR validation failed! Total mismatch: QR shows " + qrTotal +
                                 " but calculated " + calculatedTotal, Toast.LENGTH_LONG).show();
@@ -987,6 +1012,29 @@ public class HomeInventory extends Fragment {
                     } catch (NumberFormatException e) {
                         // Could not parse total, skip validation
                     }
+                }
+
+                // Validation passed — now update UI
+                isParsingQRData = true;
+                qrRadialData = tempRadialData;
+
+                // Set spinners
+                for (int i = 0; i < sites.length; i++) {
+                    if (sites[i].equalsIgnoreCase(site)) {
+                        spinnerSite.setSelection(i);
+                        selectedSite = sites[i];
+                        break;
+                    }
+                }
+
+                spinnerMonth.setSelection(month - 1);
+                selectedMonth = month;
+
+                int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+                int yearIndex = currentYear - year;
+                if (yearIndex >= 0 && yearIndex < 6) {
+                    spinnerYear.setSelection(yearIndex);
+                    selectedYear = year;
                 }
 
                 // Keep flag true during generateDaysList to prevent spinner listeners from interfering
