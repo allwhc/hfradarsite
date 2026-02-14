@@ -781,10 +781,15 @@
                         <!-- ALL RECORDS VIEW (toggled) -->
                         <div ng-show="showAllRecords">
                             <div class="row" style="margin-bottom: 10px;">
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <form class="form-inline">
                                         <div class="form-group">
-                                            <label>Filter by Site:&nbsp;</label>
+                                            <label>Date:&nbsp;</label>
+                                            <input type="date" class="form-control" ng-model="attDateFilter" ng-change="loadUserAttendance()">
+                                        </div>
+                                        &nbsp;&nbsp;
+                                        <div class="form-group">
+                                            <label>Site:&nbsp;</label>
                                             <select class="form-control" ng-model="attSiteFilter" ng-change="loadUserAttendance()">
                                                 <option value="">-- All Sites --</option>
                                                 <option ng-repeat="s in attSiteList" value="{{s}}">{{s}}</option>

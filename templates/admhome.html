@@ -519,9 +519,14 @@
 						<div class="row" style="margin-bottom: 20px;">
 							<div class="col-md-12">
 								<div class="panel panel-info">
-									<div class="panel-heading"><strong>Filter by Site</strong></div>
+									<div class="panel-heading"><strong>Filter Attendance</strong></div>
 									<div class="panel-body">
 										<form class="form-inline">
+											<div class="form-group">
+												<label>Date:&nbsp;</label>
+												<input type="date" class="form-control" ng-model="selectedDate" ng-change="loadAttendance()">
+											</div>
+											&nbsp;&nbsp;
 											<div class="form-group">
 												<label>Site:&nbsp;</label>
 												<select class="form-control" id="attendanceSiteFilter" ng-model="selectedSite" ng-change="loadAttendance()">

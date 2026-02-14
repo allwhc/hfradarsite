@@ -785,6 +785,7 @@ $scope.ival2=2;
 // Attendance Controller (User View)
 myApp.controller('AttTabsCtrl', function ($scope, $http) {
     $scope.attSiteFilter = "";
+    $scope.attDateFilter = null;
     $scope.attRecords = [];
     $scope.attSiteList = [];
     $scope.attSummary = [];
@@ -812,7 +813,15 @@ myApp.controller('AttTabsCtrl', function ($scope, $http) {
     // Load all attendance records
     $scope.loadUserAttendance = function() {
         var cfig = { headers: { 'Content-Type': 'application/json' } };
-        $http.post("getAttendance", JSON.stringify({site_code: $scope.attSiteFilter}), cfig).then(
+        var payload = {site_code: $scope.attSiteFilter};
+        if ($scope.attDateFilter) {
+            var d = $scope.attDateFilter;
+            var yyyy = d.getFullYear();
+            var mm = ('0' + (d.getMonth() + 1)).slice(-2);
+            var dd = ('0' + d.getDate()).slice(-2);
+            payload.date = yyyy + '-' + mm + '-' + dd;
+        }
+        $http.post("getAttendance", JSON.stringify(payload), cfig).then(
             function(response) {
                 $scope.attRecords = response.data.records || [];
             },

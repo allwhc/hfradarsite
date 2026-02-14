@@ -636,6 +636,7 @@ amyApp.controller('DbBackupCtrl', function ($scope, $http) {
 // Attendance Controller
 amyApp.controller('AttendanceCtrl', function ($scope, $http) {
     $scope.selectedSite = "";
+    $scope.selectedDate = null;
     $scope.attendanceRecords = [];
     $scope.sitesWithCoords = [];
 
@@ -644,7 +645,15 @@ amyApp.controller('AttendanceCtrl', function ($scope, $http) {
         var cfig = {
             headers: { 'Content-Type': 'application/json' }
         };
-        $http.post("admin/getAttendance", JSON.stringify({site_code: $scope.selectedSite}), cfig).then(
+        var payload = {site_code: $scope.selectedSite};
+        if ($scope.selectedDate) {
+            var d = $scope.selectedDate;
+            var yyyy = d.getFullYear();
+            var mm = ('0' + (d.getMonth() + 1)).slice(-2);
+            var dd = ('0' + d.getDate()).slice(-2);
+            payload.date = yyyy + '-' + mm + '-' + dd;
+        }
+        $http.post("admin/getAttendance", JSON.stringify(payload), cfig).then(
             function(response) {
                 $scope.attendanceRecords = response.data.records || [];
             },
