@@ -5,7 +5,10 @@ import os,math,smtplib,os.path,sqlite3,subprocess,requests
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
+
+# IST timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
 from email import encoders
 from gsheetRAD import insert_data_to_gsheet, get_previous_month_and_year
 
@@ -1989,7 +1992,7 @@ def markAttendance():
             return json.dumps({'sel': 'markAttendance', 'stat': 'error', 'msg': 'GPS coordinates are required'})
 
         # Check 10 per day limit (same person + same site + same date)
-        today_str = date.today().strftime('%Y-%m-%d')
+        today_str = datetime.now(IST).strftime('%Y-%m-%d')
         dbcon = sqlite3.connect(DB_PATH)
         cursor = dbcon.cursor()
         cursor.execute(
@@ -2010,7 +2013,7 @@ def markAttendance():
             distance_m = round(haversine_distance(lat, lng, site_row[0], site_row[1]), 1)
 
         # Insert attendance record
-        now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        now_str = datetime.now(IST).strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute(
             "INSERT INTO attendance (staff_name, site_code, latitude, longitude, timestamp, distance_m) VALUES (?, ?, ?, ?, ?, ?)",
             (staff_name, site_code, lat, lng, now_str, distance_m)
