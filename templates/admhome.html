@@ -566,7 +566,7 @@
 												<td>{{$index + 1}}</td>
 												<td><strong>{{rec.staff_name}}</strong></td>
 												<td>{{rec.site_code}}</td>
-												<td>{{rec.timestamp}}</td>
+												<td>{{formatTimestamp(rec.timestamp)}}</td>
 												<td>{{rec.latitude.toFixed(6)}}, {{rec.longitude.toFixed(6)}}</td>
 												<td>
 													<span ng-class="{'text-success': rec.distance_m < 500, 'text-warning': rec.distance_m >= 500 && rec.distance_m < 2000, 'text-danger': rec.distance_m >= 2000}">
@@ -575,8 +575,13 @@
 													<span ng-if="rec.distance_m == 0" style="color:#999;">(Site coords not set)</span>
 												</td>
 											</tr>
-											<tr ng-if="displayedRecords().length == 0">
+											<tr ng-if="displayedRecords().length == 0 && absentSites.length == 0">
 												<td colspan="6" style="text-align:center; color:#999; padding:30px;">No attendance records found.</td>
+											</tr>
+											<tr ng-repeat="siteCode in absentSites" style="background-color:#fdecea;">
+												<td colspan="2"><strong>&ndash;</strong></td>
+												<td>{{siteCode}}</td>
+												<td colspan="3" style="color:#c0392b;"><strong>Absent</strong> &mdash; no entry on selected date</td>
 											</tr>
 										</tbody>
 									</table>

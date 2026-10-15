@@ -638,6 +638,7 @@ amyApp.controller('AttendanceCtrl', function ($scope, $http) {
     $scope.selectedSite = "";
     $scope.selectedDate = null;
     $scope.attendanceRecords = [];
+    $scope.absentSites = [];
     $scope.sitesWithCoords = [];
     $scope.uniqueSitesOnly = false;
 
@@ -659,6 +660,19 @@ amyApp.controller('AttendanceCtrl', function ($scope, $http) {
         return result;
     }
 
+    // Formats a "YYYY-MM-DD HH:MM:SS" timestamp with a 12-hour AM/PM clock.
+    $scope.formatTimestamp = function(ts) {
+        if (!ts) return ts;
+        var parts = ts.split(' ');
+        if (parts.length < 2) return ts;
+        var timeParts = parts[1].split(':');
+        var hh = parseInt(timeParts[0], 10);
+        var ampm = hh >= 12 ? 'PM' : 'AM';
+        var hh12 = hh % 12;
+        if (hh12 === 0) hh12 = 12;
+        return parts[0] + ' ' + ('0' + hh12).slice(-2) + ':' + timeParts[1] + ':' + timeParts[2] + ' ' + ampm;
+    }
+
     // Load attendance records
     $scope.loadAttendance = function() {
         var cfig = {
@@ -675,6 +689,7 @@ amyApp.controller('AttendanceCtrl', function ($scope, $http) {
         $http.post("admin/getAttendance", JSON.stringify(payload), cfig).then(
             function(response) {
                 $scope.attendanceRecords = response.data.records || [];
+                $scope.absentSites = response.data.absent_sites || [];
             },
             function(error) {
                 console.log("Error loading attendance:", error);

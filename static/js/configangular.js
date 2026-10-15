@@ -787,9 +787,11 @@ myApp.controller('AttTabsCtrl', function ($scope, $http) {
     $scope.attSiteFilter = "";
     $scope.attDateFilter = null;
     $scope.attRecords = [];
+    $scope.absentSites = [];
     $scope.attSiteList = [];
     $scope.attSummary = [];
     $scope.showAllRecords = false;
+    $scope.uniqueEntriesOnly = false;
 
     // Load site list on init
     var cfig = { headers: { 'Content-Type': 'application/json' } };
@@ -824,11 +826,43 @@ myApp.controller('AttTabsCtrl', function ($scope, $http) {
         $http.post("getAttendance", JSON.stringify(payload), cfig).then(
             function(response) {
                 $scope.attRecords = response.data.records || [];
+                $scope.absentSites = response.data.absent_sites || [];
             },
             function(error) {
                 console.log("Error loading attendance:", error);
             }
         );
+    }
+
+    // Returns attRecords, optionally collapsed to the most recent
+    // record per site when "Unique sites only" is checked.
+    $scope.displayedAttRecords = function() {
+        if (!$scope.uniqueEntriesOnly) {
+            return $scope.attRecords;
+        }
+        var seen = {};
+        var result = [];
+        for (var i = 0; i < $scope.attRecords.length; i++) {
+            var rec = $scope.attRecords[i];
+            if (!seen[rec.site_code]) {
+                seen[rec.site_code] = true;
+                result.push(rec);
+            }
+        }
+        return result;
+    }
+
+    // Formats a "YYYY-MM-DD HH:MM:SS" timestamp with a 12-hour AM/PM clock.
+    $scope.formatTimestamp = function(ts) {
+        if (!ts) return ts;
+        var parts = ts.split(' ');
+        if (parts.length < 2) return ts;
+        var timeParts = parts[1].split(':');
+        var hh = parseInt(timeParts[0], 10);
+        var ampm = hh >= 12 ? 'PM' : 'AM';
+        var hh12 = hh % 12;
+        if (hh12 === 0) hh12 = 12;
+        return parts[0] + ' ' + ('0' + hh12).slice(-2) + ':' + timeParts[1] + ':' + timeParts[2] + ' ' + ampm;
     }
 
     // Toggle between summary and all records

@@ -758,7 +758,7 @@
                                             <td>{{$index + 1}}</td>
                                             <td><strong>{{rec.site_code}}</strong></td>
                                             <td>{{rec.staff_name}}</td>
-                                            <td>{{rec.timestamp}}</td>
+                                            <td>{{formatTimestamp(rec.timestamp)}}</td>
                                             <td>
                                                 <span ng-if="rec.latitude != 0">{{rec.latitude.toFixed(6)}}, {{rec.longitude.toFixed(6)}}</span>
                                                 <span ng-if="rec.latitude == 0" style="color:#999;">-</span>
@@ -795,6 +795,10 @@
                                                 <option ng-repeat="s in attSiteList" value="{{s}}">{{s}}</option>
                                             </select>
                                         </div>
+                                        &nbsp;&nbsp;
+                                        <div class="form-group">
+                                            <label><input type="checkbox" ng-model="uniqueEntriesOnly">&nbsp;Unique sites only (latest per site)</label>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
@@ -812,19 +816,24 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr ng-repeat="rec in attRecords">
+                                                <tr ng-repeat="rec in displayedAttRecords()">
                                                     <td>{{$index + 1}}</td>
                                                     <td><strong>{{rec.staff_name}}</strong></td>
                                                     <td>{{rec.site_code}}</td>
-                                                    <td>{{rec.timestamp}}</td>
+                                                    <td>{{formatTimestamp(rec.timestamp)}}</td>
                                                     <td>
                                                         <span ng-class="{'text-success': rec.distance_str.indexOf('m') > -1 && rec.distance_str.indexOf('km') == -1, 'text-warning': rec.distance_str.indexOf('km') > -1}">
                                                             <strong>{{rec.distance_str}}</strong>
                                                         </span>
                                                     </td>
                                                 </tr>
-                                                <tr ng-if="attRecords.length == 0">
+                                                <tr ng-if="displayedAttRecords().length == 0 && absentSites.length == 0">
                                                     <td colspan="5" style="text-align:center; color:#999; padding:30px;">No attendance records found.</td>
+                                                </tr>
+                                                <tr ng-repeat="siteCode in absentSites" style="background-color:#fdecea;">
+                                                    <td colspan="2"><strong>&ndash;</strong></td>
+                                                    <td>{{siteCode}}</td>
+                                                    <td colspan="2" style="color:#c0392b;"><strong>Absent</strong> &mdash; no entry on selected date</td>
                                                 </tr>
                                             </tbody>
                                         </table>

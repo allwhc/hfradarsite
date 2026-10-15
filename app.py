@@ -2075,6 +2075,17 @@ def adminGetAttendance():
         cursor.execute(query, params)
 
         rows = cursor.fetchall()
+
+        absent_sites = []
+        if filter_date:
+            cursor.execute(
+                "SELECT site_code FROM sites WHERE is_active=1 AND site_code NOT IN "
+                "(SELECT DISTINCT site_code FROM attendance WHERE DATE(timestamp)=?) "
+                "ORDER BY display_order",
+                (filter_date,)
+            )
+            absent_sites = [r[0] for r in cursor.fetchall()]
+
         dbcon.close()
 
         records = []
@@ -2095,10 +2106,10 @@ def adminGetAttendance():
                 'distance_str': dist_str
             })
 
-        return json.dumps({'sel': 'adminGetAttendance', 'stat': 'success', 'records': records})
+        return json.dumps({'sel': 'adminGetAttendance', 'stat': 'success', 'records': records, 'absent_sites': absent_sites})
     except Exception as e:
         print("Error getting attendance:", e)
-        return json.dumps({'sel': 'adminGetAttendance', 'stat': 'error', 'records': []})
+        return json.dumps({'sel': 'adminGetAttendance', 'stat': 'error', 'records': [], 'absent_sites': []})
 
 # Get attendance records for user view (filter by site, for verification)
 @app.route("/getAttendance", methods=['POST'])
@@ -2124,6 +2135,17 @@ def getAttendance():
         cursor.execute(query, params)
 
         rows = cursor.fetchall()
+
+        absent_sites = []
+        if filter_date:
+            cursor.execute(
+                "SELECT site_code FROM sites WHERE is_active=1 AND site_code NOT IN "
+                "(SELECT DISTINCT site_code FROM attendance WHERE DATE(timestamp)=?) "
+                "ORDER BY display_order",
+                (filter_date,)
+            )
+            absent_sites = [r[0] for r in cursor.fetchall()]
+
         dbcon.close()
 
         records = []
@@ -2142,10 +2164,10 @@ def getAttendance():
                 'distance_str': dist_str
             })
 
-        return json.dumps({'sel': 'getAttendance', 'stat': 'success', 'records': records})
+        return json.dumps({'sel': 'getAttendance', 'stat': 'success', 'records': records, 'absent_sites': absent_sites})
     except Exception as e:
         print("Error getting attendance:", e)
-        return json.dumps({'sel': 'getAttendance', 'stat': 'error', 'records': []})
+        return json.dumps({'sel': 'getAttendance', 'stat': 'error', 'records': [], 'absent_sites': []})
 
 # Get attendance summary - latest entry per site (for user view)
 @app.route("/getAttendanceSummary", methods=['POST'])
