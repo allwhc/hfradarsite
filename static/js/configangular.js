@@ -873,6 +873,65 @@ myApp.controller('AttTabsCtrl', function ($scope, $http) {
         }
     }
 
+    // Generate and download a CSV attendance report for the last N days
+    $scope.reportLoading = false;
+    $scope.reportMsg = "";
+    $scope.reportError = false;
+
+    $scope.downloadReport = function(days) {
+        $scope.reportLoading = true;
+        $scope.reportMsg = "";
+        $scope.reportError = false;
+
+        var cfig = { headers: { 'Content-Type': 'application/json' } };
+        $http.post("getAttendanceRange", JSON.stringify({days: days}), cfig).then(
+            function(response) {
+                $scope.reportLoading = false;
+                var resp = response.data;
+                if (resp.stat != "success" || !resp.report || resp.report.length == 0) {
+                    $scope.reportError = true;
+                    $scope.reportMsg = "No data available for this range.";
+                    return;
+                }
+
+                var header = ["Date", "Site", "Status", "Staff Name", "Time", "Distance from Site"];
+                var csvRows = [header.join(",")];
+                for (var i = 0; i < resp.report.length; i++) {
+                    var r = resp.report[i];
+                    var timeStr = r.timestamp && r.timestamp != "-" ? $scope.formatTimestamp(r.timestamp) : "-";
+                    var row = [r.date, r.site_code, r.status, r.staff_name, timeStr, r.distance_str];
+                    var escaped = row.map(function(v) {
+                        v = String(v);
+                        if (v.indexOf(',') > -1 || v.indexOf('"') > -1) {
+                            v = '"' + v.replace(/"/g, '""') + '"';
+                        }
+                        return v;
+                    });
+                    csvRows.push(escaped.join(","));
+                }
+
+                var csvContent = csvRows.join("\r\n");
+                var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                var url = URL.createObjectURL(blob);
+                var link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", "attendance_report_" + days + "days_" + new Date().toISOString().slice(0,10) + ".csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                $scope.reportMsg = "Report downloaded successfully.";
+            },
+            function(error) {
+                $scope.reportLoading = false;
+                $scope.reportError = true;
+                $scope.reportMsg = "Error generating report. Please try again.";
+                console.log("Error generating report:", error);
+            }
+        );
+    }
+
     // Auto-load summary on init
     $scope.loadAttendanceSummary();
 });

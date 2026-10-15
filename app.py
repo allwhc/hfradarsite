@@ -2221,6 +2221,80 @@ def getAttendanceSummary():
         print("Error getting attendance summary:", e)
         return json.dumps({'sel': 'getAttendanceSummary', 'stat': 'error', 'summary': []})
 
+# Get attendance report for a date range - one entry per site per day,
+# with sites that have no record that day marked as absent (for CSV export)
+@app.route("/getAttendanceRange", methods=['POST'])
+@cross_origin()
+def getAttendanceRange():
+    try:
+        data = request.get_json(silent=True)
+        days = int(data.get('days', 7))
+        days = max(1, min(days, 60))
+
+        end_date = date.today()
+        start_date = end_date - timedelta(days=days - 1)
+
+        dbcon = sqlite3.connect(DB_PATH)
+        cursor = dbcon.cursor()
+
+        cursor.execute("SELECT site_code FROM sites WHERE is_active=1 ORDER BY display_order")
+        site_codes = [r[0] for r in cursor.fetchall()]
+
+        cursor.execute(
+            "SELECT staff_name, site_code, timestamp, distance_m FROM attendance "
+            "WHERE DATE(timestamp) BETWEEN ? AND ? ORDER BY timestamp DESC",
+            (start_date.isoformat(), end_date.isoformat())
+        )
+        rows = cursor.fetchall()
+        dbcon.close()
+
+        # Keep only the most recent record per (date, site) - rows already DESC by timestamp
+        latest_by_day_site = {}
+        for staff_name, site_code, timestamp, distance_m in rows:
+            day_str = timestamp.split(' ')[0]
+            key = (day_str, site_code)
+            if key not in latest_by_day_site:
+                latest_by_day_site[key] = {
+                    'staff_name': staff_name,
+                    'timestamp': timestamp,
+                    'distance_m': distance_m
+                }
+
+        report = []
+        for i in range(days):
+            day = start_date + timedelta(days=i)
+            day_str = day.isoformat()
+            for site_code in site_codes:
+                rec = latest_by_day_site.get((day_str, site_code))
+                if rec:
+                    dist_m = rec['distance_m'] if rec['distance_m'] else 0
+                    if dist_m >= 1000:
+                        dist_str = str(round(dist_m / 1000, 1)) + " km"
+                    else:
+                        dist_str = str(int(dist_m)) + " m"
+                    report.append({
+                        'date': day_str,
+                        'site_code': site_code,
+                        'status': 'Present',
+                        'staff_name': rec['staff_name'],
+                        'timestamp': rec['timestamp'],
+                        'distance_str': dist_str
+                    })
+                else:
+                    report.append({
+                        'date': day_str,
+                        'site_code': site_code,
+                        'status': 'Absent',
+                        'staff_name': '-',
+                        'timestamp': '-',
+                        'distance_str': '-'
+                    })
+
+        return json.dumps({'sel': 'getAttendanceRange', 'stat': 'success', 'report': report})
+    except Exception as e:
+        print("Error getting attendance range:", e)
+        return json.dumps({'sel': 'getAttendanceRange', 'stat': 'error', 'report': []})
+
 # Admin API: Update site coordinates
 @app.route("/admin/updateSiteCoords", methods=['POST'])
 def adminUpdateSiteCoords():

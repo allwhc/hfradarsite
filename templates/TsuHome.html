@@ -842,6 +842,31 @@
                                 </div>
                             </div>
                         </div>
+
+                        <hr style="margin: 30px 0; border-top: 2px solid #ccc;">
+
+                        <!-- Attendance Report Download -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="panel panel-info">
+                                    <div class="panel-heading"><strong>Generate Report</strong></div>
+                                    <div class="panel-body">
+                                        <p style="color:#666; margin-bottom:15px;">Download a day-by-day attendance report for all sites, including sites with no entry on a given day (marked Absent).</p>
+                                        <button class="btn btn-primary" ng-click="downloadReport(7)" ng-disabled="reportLoading">Last 7 Days</button>
+                                        &nbsp;
+                                        <button class="btn btn-primary" ng-click="downloadReport(15)" ng-disabled="reportLoading">Last 15 Days</button>
+                                        &nbsp;
+                                        <button class="btn btn-primary" ng-click="downloadReport(30)" ng-disabled="reportLoading">Last 30 Days</button>
+                                        <div style="margin-top:10px;" ng-if="reportLoading">
+                                            <span style="color:#666;">Generating report...</span>
+                                        </div>
+                                        <div style="margin-top:10px;" ng-if="reportMsg">
+                                            <span ng-class="{'text-danger': reportError, 'text-success': !reportError}">{{reportMsg}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 <br>
               </div>
