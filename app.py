@@ -2076,15 +2076,14 @@ def adminGetAttendance():
 
         rows = cursor.fetchall()
 
-        absent_sites = []
-        if filter_date:
-            cursor.execute(
-                "SELECT site_code FROM sites WHERE is_active=1 AND site_code NOT IN "
-                "(SELECT DISTINCT site_code FROM attendance WHERE DATE(timestamp)=?) "
-                "ORDER BY display_order",
-                (filter_date,)
-            )
-            absent_sites = [r[0] for r in cursor.fetchall()]
+        absent_date = filter_date if filter_date else date.today().isoformat()
+        cursor.execute(
+            "SELECT site_code FROM sites WHERE is_active=1 AND site_code NOT IN "
+            "(SELECT DISTINCT site_code FROM attendance WHERE DATE(timestamp)=?) "
+            "ORDER BY display_order",
+            (absent_date,)
+        )
+        absent_sites = [r[0] for r in cursor.fetchall()]
 
         dbcon.close()
 
@@ -2136,15 +2135,14 @@ def getAttendance():
 
         rows = cursor.fetchall()
 
-        absent_sites = []
-        if filter_date:
-            cursor.execute(
-                "SELECT site_code FROM sites WHERE is_active=1 AND site_code NOT IN "
-                "(SELECT DISTINCT site_code FROM attendance WHERE DATE(timestamp)=?) "
-                "ORDER BY display_order",
-                (filter_date,)
-            )
-            absent_sites = [r[0] for r in cursor.fetchall()]
+        absent_date = filter_date if filter_date else date.today().isoformat()
+        cursor.execute(
+            "SELECT site_code FROM sites WHERE is_active=1 AND site_code NOT IN "
+            "(SELECT DISTINCT site_code FROM attendance WHERE DATE(timestamp)=?) "
+            "ORDER BY display_order",
+            (absent_date,)
+        )
+        absent_sites = [r[0] for r in cursor.fetchall()]
 
         dbcon.close()
 
