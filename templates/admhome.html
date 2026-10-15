@@ -535,6 +535,10 @@
 												</select>
 											</div>
 											&nbsp;&nbsp;
+											<div class="form-group">
+												<label><input type="checkbox" ng-model="uniqueSitesOnly">&nbsp;Unique sites only (latest per site)</label>
+											</div>
+											&nbsp;&nbsp;
 											<button class="btn btn-primary" ng-click="loadAttendance()">Refresh</button>
 										</form>
 									</div>
@@ -558,7 +562,7 @@
 											</tr>
 										</thead>
 										<tbody>
-											<tr ng-repeat="rec in attendanceRecords">
+											<tr ng-repeat="rec in displayedRecords()">
 												<td>{{$index + 1}}</td>
 												<td><strong>{{rec.staff_name}}</strong></td>
 												<td>{{rec.site_code}}</td>
@@ -571,7 +575,7 @@
 													<span ng-if="rec.distance_m == 0" style="color:#999;">(Site coords not set)</span>
 												</td>
 											</tr>
-											<tr ng-if="attendanceRecords.length == 0">
+											<tr ng-if="displayedRecords().length == 0">
 												<td colspan="6" style="text-align:center; color:#999; padding:30px;">No attendance records found.</td>
 											</tr>
 										</tbody>

@@ -639,6 +639,25 @@ amyApp.controller('AttendanceCtrl', function ($scope, $http) {
     $scope.selectedDate = null;
     $scope.attendanceRecords = [];
     $scope.sitesWithCoords = [];
+    $scope.uniqueSitesOnly = false;
+
+    // Returns attendanceRecords, optionally collapsed to the most recent
+    // record per site when "Unique sites only" is checked.
+    $scope.displayedRecords = function() {
+        if (!$scope.uniqueSitesOnly) {
+            return $scope.attendanceRecords;
+        }
+        var seen = {};
+        var result = [];
+        for (var i = 0; i < $scope.attendanceRecords.length; i++) {
+            var rec = $scope.attendanceRecords[i];
+            if (!seen[rec.site_code]) {
+                seen[rec.site_code] = true;
+                result.push(rec);
+            }
+        }
+        return result;
+    }
 
     // Load attendance records
     $scope.loadAttendance = function() {
